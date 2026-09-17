@@ -1,14 +1,29 @@
+import { useCallback, useEffect, useState } from 'react';
+
 import {
+  ActivityIndicator,
+  Image,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { useRouter } from 'expo-router';
+
+import BottomNav from '../components/bottom-nav';
 
 /* =========================================================
-   OPENMIC FM COLOURS
+   API
+========================================================= */
+
+const API_URL =
+  'https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net';
+
+/* =========================================================
+   COLOURS
 ========================================================= */
 
 const RED = '#D71920';
@@ -19,124 +34,343 @@ const DARK = '#0D0D0D';
 const SURFACE = '#151515';
 const SURFACE_LIGHT = '#1E1E1E';
 const WHITE = '#FFFFFF';
-const LIGHT = '#F5F5F5';
 const GREY = '#929292';
 const BORDER = '#292929';
 
 /* =========================================================
-   HOME SCREEN
+   TYPES
+========================================================= */
+
+type Song = {
+  id: number;
+  rank: number;
+  title: string;
+  artist: string;
+  plays?: number;
+  image?: string;
+  visible?: boolean;
+};
+
+type Post = {
+  id: number;
+  type: string;
+  title: string;
+  excerpt?: string;
+  body?: string;
+  image?: string;
+  status: string;
+  published_at?: string;
+  created_at?: string;
+};
+
+type Show = {
+  id: number;
+  name: string;
+  title?: string;
+  description?: string;
+  image?: string;
+  presenter?: string;
+  start_time?: string;
+  end_time?: string;
+};
+
+/* =========================================================
+   MAIN
 ========================================================= */
 
 export default function HomeScreen() {
+  const router = useRouter();
+
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [shows, setShows] = useState<Show[]>([]);
+
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
+
+  /* =======================================================
+     IMAGE URL
+  ======================================================= */
+
+  const imageUrl = (image?: string) => {
+    if (!image) return null;
+
+    if (
+      image.startsWith('http://') ||
+      image.startsWith('https://')
+    ) {
+      return image;
+    }
+
+    return `${API_URL}${image.startsWith('/') ? '' : '/'}${image}`;
+  };
+
+  /* =======================================================
+     LOAD DATA
+  ======================================================= */
+
+  const loadData = useCallback(async () => {
+    try {
+      setError('');
+
+      const [songsResponse, postsResponse, showsResponse] =
+        await Promise.all([
+          fetch(`${API_URL}/api/songs?public=1`),
+          fetch(`${API_URL}/api/posts?status=Published`),
+          fetch(`${API_URL}/api/shows`),
+        ]);
+
+      if (!songsResponse.ok) {
+        throw new Error('Could not load songs.');
+      }
+
+      if (!postsResponse.ok) {
+        throw new Error('Could not load news.');
+      }
+
+      if (!showsResponse.ok) {
+        throw new Error('Could not load shows.');
+      }
+
+      const songsData = await songsResponse.json();
+      const postsData = await postsResponse.json();
+      const showsData = await showsResponse.json();
+
+      const cleanSongs = Array.isArray(songsData)
+        ? songsData
+        : songsData.songs || [];
+
+      const cleanPosts = Array.isArray(postsData)
+        ? postsData
+        : postsData.posts || [];
+
+      const cleanShows = Array.isArray(showsData)
+        ? showsData
+        : showsData.shows || [];
+
+      setSongs(
+        cleanSongs
+          .filter((song: Song) => song.visible !== false)
+          .sort(
+            (a: Song, b: Song) =>
+              Number(a.rank || 999) -
+              Number(b.rank || 999)
+          )
+          .slice(0, 10)
+      );
+
+      setPosts(cleanPosts);
+
+      setShows(cleanShows);
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        'Unable to load OpenMicFM content. Please try again.'
+      );
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  /* =======================================================
+     REFRESH
+  ======================================================= */
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadData();
+  };
+
+  /* =======================================================
+     DATA
+  ======================================================= */
+
+  const topStories = posts
+    .filter(
+      (post) =>
+        post.type?.toLowerCase() !== 'sport' &&
+        post.type?.toLowerCase() !== 'sports'
+    )
+    .slice(0, 2);
+
+  const topSport = posts
+    .filter(
+      (post) =>
+        post.type?.toLowerCase() === 'sport' ||
+        post.type?.toLowerCase() === 'sports'
+    )
+    .slice(0, 2);
+
+  const currentShow = shows[0];
+
+  /* =======================================================
+     LOADING
+  ======================================================= */
+
+  if (loading) {
+    return (
+      <View style={styles.loadingScreen}>
+        <View style={styles.loadingLogo}>
+          <Text style={styles.loadingLogoText}>OM</Text>
+        </View>
+
+        <ActivityIndicator
+          size="large"
+          color={RED}
+          style={styles.loadingSpinner}
+        />
+
+        <Text style={styles.loadingText}>
+          LOADING OPENMICFM
+        </Text>
+
+        <Text style={styles.loadingSubtext}>
+          Your station. Your voice.
+        </Text>
+      </View>
+    );
+  }
+
+  /* =======================================================
+     SCREEN
+  ======================================================= */
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.screen}>
       <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={RED}
+            colors={[RED]}
+          />
+        }
       >
         {/* =================================================
-            NAVBAR
+            HEADER
         ================================================= */}
 
-        <View style={styles.navbar}>
+        <View style={styles.header}>
           <View>
-            <Text style={styles.logo}>
-              OpenMic<Text style={styles.logoFM}>FM</Text>
+            <Text style={styles.headerSmall}>
+              OPENMICFM
             </Text>
 
-            <Text style={styles.logoTagline}>
-              THE STATION WITH PROGRESS
+            <Text style={styles.headerTitle}>
+              THE STATION
             </Text>
           </View>
 
-          <TouchableOpacity style={styles.liveBadge}>
+          <View style={styles.liveBadge}>
             <View style={styles.liveDot} />
 
             <Text style={styles.liveText}>
               LIVE
             </Text>
-          </TouchableOpacity>
+          </View>
         </View>
+
+        {/* =================================================
+            ERROR
+        ================================================= */}
+
+        {error ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorTitle}>
+              CONNECTION ERROR
+            </Text>
+
+            <Text style={styles.errorText}>
+              {error}
+            </Text>
+
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={loadData}
+            >
+              <Text style={styles.retryText}>
+                RETRY
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
 
         {/* =================================================
             HERO
         ================================================= */}
 
         <View style={styles.hero}>
-          <View style={styles.heroRedLine} />
+          <View style={styles.heroAccent} />
 
           <Text style={styles.heroEyebrow}>
-            OPENMIC FM
+            YOUR COMMUNITY RADIO
           </Text>
 
           <Text style={styles.heroTitle}>
-            YOUR{' '}
-            <Text style={styles.yellowText}>TRUSTED</Text>
-            {'\n'}
-            SOURCE OF
-            {'\n'}
-            LOCAL NEWS
-            {'\n'}
-            AND GREAT MUSIC
+            YOUR VOICE.
+          </Text>
+
+          <Text style={styles.heroTitleRed}>
+            YOUR STATION.
           </Text>
 
           <Text style={styles.heroDescription}>
-            Stay connected with your community through
-            local stories, great music and everything
-            happening around you.
+            Local stories, great music, sport and the
+            voices that matter to Gqeberha.
           </Text>
 
-          <View style={styles.heroButtons}>
-            <TouchableOpacity style={styles.listenButton}>
-              <Text style={styles.listenButtonText}>
-                ▶  LISTEN NOW
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.scheduleButton}>
-              <Text style={styles.scheduleButtonText}>
-                VIEW SHOWS
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={styles.listenButton}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.listenButtonText}>
+              ▶  LISTEN NOW
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* =================================================
-            STATS
+            QUICK STATS
         ================================================= */}
 
-        <View style={styles.statsContainer}>
-          <View style={styles.stat}>
-            <Text style={styles.statNumber}>
-              10+
-            </Text>
-
+        <View style={styles.statsRow}>
+          <View style={styles.statBox}>
+            <Text style={styles.statNumber}>24/7</Text>
             <Text style={styles.statLabel}>
-              YEARS OF{'\n'}RADIO
+              RADIO
             </Text>
           </View>
 
           <View style={styles.statDivider} />
 
-          <View style={styles.stat}>
+          <View style={styles.statBox}>
             <Text style={styles.statNumber}>
-              K+
+              {songs.length}
             </Text>
-
             <Text style={styles.statLabel}>
-              LISTENERS
+              TOP SONGS
             </Text>
           </View>
 
           <View style={styles.statDivider} />
 
-          <View style={styles.stat}>
+          <View style={styles.statBox}>
             <Text style={styles.statNumber}>
-              24/7
+              {posts.length}
             </Text>
-
             <Text style={styles.statLabel}>
-              ON AIR
+              STORIES
             </Text>
           </View>
         </View>
@@ -148,191 +382,152 @@ export default function HomeScreen() {
         <SectionHeader
           number="01"
           title="TOP 10 SONGS"
-          action="VIEW ALL"
+          action="MUSIC"
+          onPress={() => router.push('/music')}
         />
 
-        <Text style={styles.sectionSubtitle}>
-          THE MOST PLAYED SONGS IN SA
-        </Text>
-
-        <View style={styles.songContainer}>
-          <Song
-            position="01"
-            title="Top Song"
-            artist="Artist Name"
-          />
-
-          <Song
-            position="02"
-            title="Second Song"
-            artist="Artist Name"
-          />
-
-          <Song
-            position="03"
-            title="Third Song"
-            artist="Artist Name"
-          />
-
-          <Song
-            position="04"
-            title="Fourth Song"
-            artist="Artist Name"
-          />
-
-          <Song
-            position="05"
-            title="Fifth Song"
-            artist="Artist Name"
-          />
+        <View style={styles.songsCard}>
+          {songs.length > 0 ? (
+            songs.map((song, index) => (
+              <SongRow
+                key={song.id}
+                song={song}
+                index={index}
+                imageUrl={imageUrl(song.image)}
+              />
+            ))
+          ) : (
+            <EmptyState text="No songs available." />
+          )}
         </View>
 
         {/* =================================================
-            NEWS
+            TOP STORIES
         ================================================= */}
 
         <SectionHeader
           number="02"
-          title="YOUR TOP STORIES"
-          action="MORE"
+          title="TOP STORIES"
+          action="VIEW ALL"
+          onPress={() => router.push('/news')}
         />
 
-        <TouchableOpacity style={styles.featuredStory}>
-          <View style={styles.featuredImage}>
-            <Text style={styles.imagePlaceholder}>
-              NEWS IMAGE
-            </Text>
+        {topStories.length > 0 ? (
+          <View style={styles.storyList}>
+            {topStories.map((post, index) => (
+              <StoryCard
+                key={post.id}
+                post={post}
+                imageUrl={imageUrl(post.image)}
+                featured={index === 0}
+              />
+            ))}
           </View>
-
-          <View style={styles.storyBody}>
-            <View style={styles.categoryContainer}>
-              <View style={styles.categoryDot} />
-
-              <Text style={styles.category}>
-                LOCAL NEWS
-              </Text>
-            </View>
-
-            <Text style={styles.storyTitle}>
-              Latest stories from your community
-            </Text>
-
-            <Text style={styles.storyDescription}>
-              Discover the latest news, events and stories
-              happening around Gqeberha.
-            </Text>
-
-            <Text style={styles.readMore}>
-              READ STORY  →
-            </Text>
-          </View>
-        </TouchableOpacity>
+        ) : (
+          <EmptyState text="No published stories available." />
+        )}
 
         {/* =================================================
-            NEWS TABS
+            TOP SPORT
         ================================================= */}
 
-        <View style={styles.newsTabs}>
-          <TouchableOpacity style={styles.activeTab}>
-            <Text style={styles.activeTabText}>
-              LOCAL NEWS
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.inactiveTab}>
-            <Text style={styles.inactiveTabText}>
-              NATIONAL
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.inactiveTab}>
-            <Text style={styles.inactiveTabText}>
-              SPORT
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* NEWS CARDS */}
-
-        <NewsCard
-          category="LOCAL NEWS"
-          title="What's happening in your community"
+        <SectionHeader
+          number="03"
+          title="TOP SPORT"
+          action="SPORT"
+          onPress={() => router.push('/news')}
         />
 
-        <NewsCard
-          category="NATIONAL NEWS"
-          title="The latest stories from South Africa"
-        />
-
-        <NewsCard
-          category="SPORT"
-          title="Latest sports news and updates"
-        />
-
-        {/* =================================================
-            COMMUNITY
-        ================================================= */}
-
-        <View style={styles.communitySection}>
-          <View style={styles.communityAccent} />
-
-          <Text style={styles.communityEyebrow}>
-            OPENMIC FM
-          </Text>
-
-          <Text style={styles.communityTitle}>
-            JOIN OUR
-            {'\n'}
-            <Text style={styles.yellowText}>
-              LISTENING COMMUNITY
-            </Text>
-          </Text>
-
-          <Text style={styles.communityText}>
-            Experience the local sounds and stories of
-            Gqeberha. Your voice matters to us.
-          </Text>
-
-          <TouchableOpacity style={styles.communityButton}>
-            <Text style={styles.communityButtonText}>
-              LISTEN NOW  →
-            </Text>
-          </TouchableOpacity>
-        </View>
+        {topSport.length > 0 ? (
+          <View style={styles.storyList}>
+            {topSport.map((post) => (
+              <StoryCard
+                key={`sport-${post.id}`}
+                post={post}
+                imageUrl={imageUrl(post.image)}
+              />
+            ))}
+          </View>
+        ) : (
+          <EmptyState text="No sport stories available." />
+        )}
 
         {/* =================================================
             ON AIR
         ================================================= */}
 
         <SectionHeader
-          number="03"
+          number="04"
           title="ON AIR"
-          action="SHOW SCHEDULE"
         />
 
         <View style={styles.onAirCard}>
           <View style={styles.onAirTop}>
-            <View style={styles.onAirStatus}>
+            <View style={styles.onAirLive}>
               <View style={styles.liveDot} />
 
-              <Text style={styles.onAirStatusText}>
-                CURRENTLY ON AIR
+              <Text style={styles.onAirLiveText}>
+                ON AIR NOW
               </Text>
             </View>
+
+            <Text style={styles.onAirTime}>
+              24/7
+            </Text>
           </View>
 
           <Text style={styles.onAirTitle}>
-            OpenMic FM
+            {currentShow?.name ||
+              currentShow?.title ||
+              'OPENMICFM RADIO'}
           </Text>
 
-          <Text style={styles.onAirSubtitle}>
-            Your trusted source of local news
-            and great music.
+          <Text style={styles.onAirPresenter}>
+            {currentShow?.presenter ||
+              'OPENMICFM'}
           </Text>
 
-          <TouchableOpacity style={styles.bigPlayButton}>
-            <Text style={styles.playIcon}>
-              ▶
+          <View style={styles.waveRow}>
+            {[18, 28, 42, 25, 36, 48, 24, 40, 30, 18].map(
+              (height, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.wave,
+                    { height },
+                  ]}
+                />
+              )
+            )}
+          </View>
+        </View>
+
+        {/* =================================================
+            COMMUNITY
+        ================================================= */}
+
+        <View style={styles.communityCard}>
+          <Text style={styles.communityEyebrow}>
+            OPENMICFM COMMUNITY
+          </Text>
+
+          <Text style={styles.communityTitle}>
+            YOUR VOICE
+            {'\n'}
+            MATTERS.
+          </Text>
+
+          <Text style={styles.communityText}>
+            Stay connected with the latest stories,
+            music and conversations from your community.
+          </Text>
+
+          <TouchableOpacity
+            style={styles.communityButton}
+            onPress={() => router.push('/news')}
+          >
+            <Text style={styles.communityButtonText}>
+              EXPLORE NEWS →
             </Text>
           </TouchableOpacity>
         </View>
@@ -342,124 +537,53 @@ export default function HomeScreen() {
         ================================================= */}
 
         <View style={styles.advertiseCard}>
-          <View style={styles.advertiseTop}>
-            <Text style={styles.advertiseLabel}>
-              FOR BUSINESSES
-            </Text>
-
-            <View style={styles.yellowBox}>
-              <Text style={styles.yellowBoxText}>
-                AD
-              </Text>
-            </View>
-          </View>
+          <Text style={styles.advertiseSmall}>
+            BUSINESS?
+          </Text>
 
           <Text style={styles.advertiseTitle}>
             ADVERTISE
             {'\n'}
-            <Text style={styles.yellowText}>
-              WITH US
-            </Text>
+            WITH US.
           </Text>
 
           <Text style={styles.advertiseText}>
-            Promote your business to OpenMic FM
-            listeners through our advertising packages.
+            Put your brand in front of the OpenMicFM
+            listening community.
           </Text>
 
-          <TouchableOpacity style={styles.outlineButton}>
-            <Text style={styles.outlineButtonText}>
-              VIEW RATE CARD  →
+          <TouchableOpacity
+            style={styles.advertiseButton}
+          >
+            <Text style={styles.advertiseButtonText}>
+              GET IN TOUCH
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* =================================================
-            RECENT HIGHLIGHTS
-        ================================================= */}
-
-        <SectionHeader
-          number="04"
-          title="RECENT HIGHLIGHTS"
-          action="VIEW ALL"
-        />
-
-        <View style={styles.highlightsGrid}>
-          <Highlight title="OpenMic FM" />
-          <Highlight title="Community" />
-          <Highlight title="Local Stories" />
-          <Highlight title="Great Music" />
-        </View>
-
-        {/* =================================================
-            CONTACT / FOOTER
+            FOOTER
         ================================================= */}
 
         <View style={styles.footer}>
           <Text style={styles.footerLogo}>
-            OpenMic<Text style={styles.logoFM}>FM</Text>
+            OPENMICFM
           </Text>
 
-          <Text style={styles.footerTagline}>
+          <Text style={styles.footerText}>
             THE STATION WITH PROGRESS
           </Text>
 
-          <View style={styles.footerLine} />
-
-          <Text style={styles.footerContact}>
-            info@openmicfm.co.za
-          </Text>
-
-          <Text style={styles.footerContact}>
-            +27 41 464 4471
-          </Text>
-
-          <Text style={styles.footerContact}>
-            Pier 14 Shopping Mall
-          </Text>
-
-          <Text style={styles.footerContact}>
-            Nelson Mandela Bay, South Africa
-          </Text>
-
-          <Text style={styles.copyright}>
-            © 2026 OpenMic FM
+          <Text style={styles.footerCopyright}>
+            GQEBERHA • SOUTH AFRICA
           </Text>
         </View>
+
+        <View style={styles.bottomSpace} />
       </ScrollView>
 
-      {/* =================================================
-          MOBILE NAVIGATION
-      ================================================= */}
-
-      <View style={styles.bottomNav}>
-        <NavItem
-          icon="⌂"
-          label="HOME"
-          active
-        />
-
-        <NavItem
-          icon="▤"
-          label="NEWS"
-        />
-
-        <NavItem
-          icon="♪"
-          label="MUSIC"
-        />
-
-        <NavItem
-          icon="◉"
-          label="SHOWS"
-        />
-
-        <NavItem
-          icon="☰"
-          label="MORE"
-        />
-      </View>
-    </SafeAreaView>
+      <BottomNav />
+    </View>
   );
 }
 
@@ -471,10 +595,12 @@ function SectionHeader({
   number,
   title,
   action,
+  onPress,
 }: {
   number: string;
   title: string;
-  action: string;
+  action?: string;
+  onPress?: () => void;
 }) {
   return (
     <View style={styles.sectionHeader}>
@@ -488,158 +614,158 @@ function SectionHeader({
         </Text>
       </View>
 
-      <TouchableOpacity>
-        <Text style={styles.sectionAction}>
-          {action} →
-        </Text>
-      </TouchableOpacity>
+      {action ? (
+        <TouchableOpacity
+          onPress={onPress}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.sectionAction}>
+            {action} →
+          </Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 }
 
 /* =========================================================
-   SONG
+   SONG ROW
 ========================================================= */
 
-function Song({
-  position,
-  title,
-  artist,
+function SongRow({
+  song,
+  index,
+  imageUrl,
 }: {
-  position: string;
-  title: string;
-  artist: string;
+  song: Song;
+  index: number;
+  imageUrl: string | null;
 }) {
   return (
-    <TouchableOpacity style={styles.song}>
-      <Text style={styles.songPosition}>
-        {position}
+    <View style={styles.songRow}>
+      <Text style={styles.songRank}>
+        {String(index + 1).padStart(2, '0')}
       </Text>
 
-      <View style={styles.songImage}>
-        <Text style={styles.musicIcon}>
-          ♪
-        </Text>
-      </View>
-
-      <View style={styles.songInfo}>
-        <Text style={styles.songTitle}>
-          {title}
-        </Text>
-
-        <Text style={styles.songArtist}>
-          {artist}
-        </Text>
-      </View>
-
-      <Text style={styles.songArrow}>
-        →
-      </Text>
-    </TouchableOpacity>
-  );
-}
-
-/* =========================================================
-   NEWS CARD
-========================================================= */
-
-function NewsCard({
-  category,
-  title,
-}: {
-  category: string;
-  title: string;
-}) {
-  return (
-    <TouchableOpacity style={styles.newsCard}>
-      <View style={styles.newsImage}>
-        <Text style={styles.imagePlaceholder}>
-          IMAGE
-        </Text>
-      </View>
-
-      <View style={styles.newsContent}>
-        <View style={styles.categoryContainer}>
-          <View style={styles.categoryDot} />
-
-          <Text style={styles.category}>
-            {category}
+      {imageUrl ? (
+        <Image
+          source={{ uri: imageUrl }}
+          style={styles.songImage}
+        />
+      ) : (
+        <View style={styles.songImagePlaceholder}>
+          <Text style={styles.songPlaceholderText}>
+            ♪
           </Text>
         </View>
+      )}
 
-        <Text style={styles.newsTitle}>
-          {title}
+      <View style={styles.songInfo}>
+        <Text
+          style={styles.songTitle}
+          numberOfLines={1}
+        >
+          {song.title}
         </Text>
 
-        <Text style={styles.readMore}>
-          READ MORE →
+        <Text
+          style={styles.songArtist}
+          numberOfLines={1}
+        >
+          {song.artist}
         </Text>
       </View>
-    </TouchableOpacity>
+
+      <Text style={styles.songArrow}>›</Text>
+    </View>
   );
 }
 
 /* =========================================================
-   HIGHLIGHT
+   STORY CARD
 ========================================================= */
 
-function Highlight({
-  title,
+function StoryCard({
+  post,
+  imageUrl,
+  featured = false,
 }: {
-  title: string;
+  post: Post;
+  imageUrl: string | null;
+  featured?: boolean;
 }) {
   return (
-    <TouchableOpacity style={styles.highlight}>
-      <View style={styles.highlightImage}>
-        <Text style={styles.imagePlaceholder}>
-          IMAGE
+    <View
+      style={[
+        styles.storyCard,
+        featured && styles.featuredStoryCard,
+      ]}
+    >
+      {imageUrl ? (
+        <Image
+          source={{ uri: imageUrl }}
+          style={[
+            styles.storyImage,
+            featured && styles.featuredStoryImage,
+          ]}
+          resizeMode="cover"
+        />
+      ) : (
+        <View
+          style={[
+            styles.storyImagePlaceholder,
+            featured && styles.featuredStoryImage,
+          ]}
+        >
+          <Text style={styles.storyPlaceholderText}>
+            OPENMICFM
+          </Text>
+        </View>
+      )}
+
+      <View style={styles.storyContent}>
+        <Text style={styles.storyType}>
+          {post.type?.toUpperCase() || 'NEWS'}
         </Text>
+
+        <Text
+          style={[
+            styles.storyTitle,
+            featured && styles.featuredStoryTitle,
+          ]}
+          numberOfLines={featured ? 3 : 2}
+        >
+          {post.title}
+        </Text>
+
+        {post.excerpt ? (
+          <Text
+            style={styles.storyExcerpt}
+            numberOfLines={featured ? 2 : 1}
+          >
+            {post.excerpt}
+          </Text>
+        ) : null}
       </View>
-
-      <Text style={styles.highlightTitle}>
-        {title}
-      </Text>
-
-      <Text style={styles.highlightArrow}>
-        →
-      </Text>
-    </TouchableOpacity>
+    </View>
   );
 }
 
 /* =========================================================
-   NAV ITEM
+   EMPTY
 ========================================================= */
 
-function NavItem({
-  icon,
-  label,
-  active = false,
+function EmptyState({
+  text,
 }: {
-  icon: string;
-  label: string;
-  active?: boolean;
+  text: string;
 }) {
   return (
-    <TouchableOpacity style={styles.navItem}>
-      <Text
-        style={[
-          styles.navIcon,
-          active && styles.navIconActive,
-        ]}
-      >
-        {icon}
+    <View style={styles.emptyBox}>
+      <Text style={styles.emptyText}>
+        {text}
       </Text>
-
-      <Text
-        style={[
-          styles.navLabel,
-          active && styles.navLabelActive,
-        ]}
-      >
-        {label}
-      </Text>
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -648,131 +774,133 @@ function NavItem({
 ========================================================= */
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
     backgroundColor: BLACK,
   },
 
-  scrollContent: {
-    paddingBottom: 110,
+  scroll: {
+    flex: 1,
+    backgroundColor: BLACK,
   },
 
-  /* =========================
-     NAVBAR
-  ========================= */
+  content: {
+    paddingTop: 58,
+    paddingHorizontal: 18,
+  },
 
-  navbar: {
-    minHeight: 82,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: BLACK,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
+  /* HEADER */
+
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: 22,
   },
 
-  logo: {
-    color: WHITE,
-    fontSize: 25,
-    fontWeight: '900',
-    letterSpacing: -1.5,
-  },
-
-  logoFM: {
+  headerSmall: {
     color: RED,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 2,
   },
 
-  logoTagline: {
-    color: GREY,
-    fontSize: 7,
-    fontWeight: '700',
-    letterSpacing: 1.2,
+  headerTitle: {
+    color: WHITE,
+    fontSize: 22,
+    fontWeight: '900',
+    letterSpacing: -0.5,
     marginTop: 2,
   },
 
   liveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: RED,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 4,
+    backgroundColor: SURFACE,
+    borderWidth: 1,
+    borderColor: BORDER,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 20,
   },
 
   liveDot: {
     width: 7,
     height: 7,
     borderRadius: 7,
-    backgroundColor: WHITE,
-    marginRight: 7,
+    backgroundColor: RED,
+    marginRight: 6,
   },
 
   liveText: {
     color: WHITE,
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: '900',
     letterSpacing: 1,
   },
 
-  /* =========================
-     HERO
-  ========================= */
+  /* HERO */
 
   hero: {
-    paddingHorizontal: 22,
-    paddingTop: 45,
-    paddingBottom: 38,
-    backgroundColor: BLACK,
+    backgroundColor: SURFACE,
+    borderWidth: 1,
+    borderColor: BORDER,
+    padding: 22,
+    minHeight: 300,
+    position: 'relative',
+    overflow: 'hidden',
   },
 
-  heroRedLine: {
-    width: 45,
-    height: 5,
+  heroAccent: {
+    position: 'absolute',
+    right: -50,
+    top: -50,
+    width: 150,
+    height: 150,
+    borderRadius: 150,
     backgroundColor: RED,
-    marginBottom: 18,
+    opacity: 0.12,
   },
 
   heroEyebrow: {
     color: YELLOW,
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '900',
-    letterSpacing: 2,
-    marginBottom: 18,
+    letterSpacing: 1.5,
+    marginBottom: 28,
   },
 
   heroTitle: {
     color: WHITE,
-    fontSize: 42,
-    lineHeight: 43,
+    fontSize: 43,
     fontWeight: '900',
-    letterSpacing: -1.8,
+    letterSpacing: -2,
+    lineHeight: 43,
   },
 
-  yellowText: {
-    color: YELLOW,
+  heroTitleRed: {
+    color: RED,
+    fontSize: 43,
+    fontWeight: '900',
+    letterSpacing: -2,
+    lineHeight: 43,
   },
 
   heroDescription: {
     color: GREY,
-    fontSize: 15,
-    lineHeight: 23,
-    marginTop: 22,
-    maxWidth: 370,
-  },
-
-  heroButtons: {
-    flexDirection: 'row',
-    marginTop: 28,
-    gap: 10,
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 18,
+    maxWidth: 320,
   },
 
   listenButton: {
+    alignSelf: 'flex-start',
     backgroundColor: RED,
     paddingHorizontal: 18,
-    paddingVertical: 15,
-    borderRadius: 4,
+    paddingVertical: 13,
+    marginTop: 22,
+    borderRadius: 3,
   },
 
   listenButtonText: {
@@ -782,84 +910,63 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
 
-  scheduleButton: {
-    borderWidth: 1,
-    borderColor: WHITE,
-    paddingHorizontal: 18,
-    paddingVertical: 15,
-    borderRadius: 4,
-  },
+  /* STATS */
 
-  scheduleButtonText: {
-    color: WHITE,
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-  },
-
-  /* =========================
-     STATS
-  ========================= */
-
-  statsContainer: {
-    backgroundColor: RED,
-    minHeight: 105,
+  statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingHorizontal: 12,
+    backgroundColor: SURFACE,
+    borderWidth: 1,
+    borderColor: BORDER,
+    marginTop: 12,
+    paddingVertical: 18,
   },
 
-  stat: {
+  statBox: {
     flex: 1,
     alignItems: 'center',
   },
 
   statNumber: {
     color: WHITE,
-    fontSize: 27,
+    fontSize: 19,
     fontWeight: '900',
   },
 
   statLabel: {
-    color: WHITE,
-    fontSize: 8,
-    fontWeight: '800',
+    color: GREY,
+    fontSize: 7,
+    fontWeight: '900',
     letterSpacing: 1,
-    textAlign: 'center',
     marginTop: 4,
   },
 
   statDivider: {
     width: 1,
-    height: 42,
-    backgroundColor: 'rgba(255,255,255,0.35)',
+    height: 30,
+    backgroundColor: BORDER,
   },
 
-  /* =========================
-     SECTION HEADER
-  ========================= */
+  /* SECTION HEADER */
 
   sectionHeader: {
-    marginTop: 42,
-    marginBottom: 10,
-    paddingHorizontal: 20,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 34,
+    marginBottom: 12,
   },
 
   sectionHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
   },
 
   sectionNumber: {
     color: RED,
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '900',
-    marginRight: 10,
+    marginRight: 9,
   },
 
   sectionTitle: {
@@ -871,554 +978,431 @@ const styles = StyleSheet.create({
 
   sectionAction: {
     color: YELLOW,
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: '900',
-    letterSpacing: 0.7,
+    letterSpacing: 0.5,
   },
 
-  sectionSubtitle: {
-    color: GREY,
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 1.3,
-    paddingHorizontal: 20,
-    marginBottom: 15,
-  },
+  /* SONGS */
 
-  /* =========================
-     SONGS
-  ========================= */
-
-  songContainer: {
-    marginHorizontal: 20,
+  songsCard: {
     backgroundColor: SURFACE,
-    borderRadius: 6,
-    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: BORDER,
   },
 
-  song: {
-    minHeight: 72,
+  songRow: {
+    minHeight: 67,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 11,
     borderBottomWidth: 1,
     borderBottomColor: BORDER,
   },
 
-  songPosition: {
-    color: YELLOW,
-    width: 32,
-    fontSize: 11,
+  songRank: {
+    width: 29,
+    color: GREY,
+    fontSize: 10,
     fontWeight: '900',
   },
 
   songImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 4,
+    width: 45,
+    height: 45,
+    borderRadius: 3,
     backgroundColor: SURFACE_LIGHT,
+  },
+
+  songImagePlaceholder: {
+    width: 45,
+    height: 45,
+    borderRadius: 3,
+    backgroundColor: RED_DARK,
     alignItems: 'center',
     justifyContent: 'center',
   },
 
-  musicIcon: {
-    color: RED,
-    fontSize: 23,
-    fontWeight: '900',
+  songPlaceholderText: {
+    color: WHITE,
+    fontSize: 20,
   },
 
   songInfo: {
     flex: 1,
-    marginLeft: 12,
+    paddingHorizontal: 11,
   },
 
   songTitle: {
     color: WHITE,
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '800',
   },
 
   songArtist: {
     color: GREY,
-    fontSize: 11,
-    marginTop: 3,
+    fontSize: 10,
+    marginTop: 4,
   },
 
   songArrow: {
-    color: YELLOW,
-    fontSize: 18,
-    fontWeight: '700',
+    color: GREY,
+    fontSize: 22,
   },
 
-  /* =========================
-     FEATURED STORY
-  ========================= */
+  /* STORIES */
 
-  featuredStory: {
-    marginHorizontal: 20,
+  storyList: {
+    gap: 10,
+  },
+
+  storyCard: {
+    flexDirection: 'row',
     backgroundColor: SURFACE,
-    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: BORDER,
+    minHeight: 105,
     overflow: 'hidden',
   },
 
-  featuredImage: {
-    height: 190,
+  featuredStoryCard: {
+    flexDirection: 'column',
+  },
+
+  storyImage: {
+    width: 108,
+    height: 105,
     backgroundColor: SURFACE_LIGHT,
+  },
+
+  featuredStoryImage: {
+    width: '100%',
+    height: 165,
+  },
+
+  storyImagePlaceholder: {
+    width: 108,
+    height: 105,
+    backgroundColor: RED_DARK,
     alignItems: 'center',
     justifyContent: 'center',
   },
 
-  imagePlaceholder: {
-    color: '#555555',
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
-
-  storyBody: {
-    padding: 18,
-  },
-
-  categoryContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 9,
-  },
-
-  categoryDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 6,
-    backgroundColor: RED,
-    marginRight: 7,
-  },
-
-  category: {
-    color: YELLOW,
+  storyPlaceholderText: {
+    color: WHITE,
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 1,
+  },
+
+  storyContent: {
+    flex: 1,
+    padding: 13,
+    justifyContent: 'center',
+  },
+
+  storyType: {
+    color: YELLOW,
+    fontSize: 8,
+    fontWeight: '900',
+    letterSpacing: 1,
+    marginBottom: 6,
   },
 
   storyTitle: {
     color: WHITE,
-    fontSize: 21,
-    lineHeight: 25,
-    fontWeight: '900',
-  },
-
-  storyDescription: {
-    color: GREY,
     fontSize: 13,
-    lineHeight: 20,
-    marginTop: 10,
-  },
-
-  readMore: {
-    color: RED,
-    fontSize: 9,
     fontWeight: '900',
-    letterSpacing: 1,
-    marginTop: 15,
+    lineHeight: 18,
   },
 
-  /* =========================
-     NEWS TABS
-  ========================= */
-
-  newsTabs: {
-    flexDirection: 'row',
-    marginHorizontal: 20,
-    marginTop: 22,
-    marginBottom: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
+  featuredStoryTitle: {
+    fontSize: 19,
+    lineHeight: 24,
   },
 
-  activeTab: {
-    paddingVertical: 12,
-    paddingHorizontal: 13,
-    borderBottomWidth: 3,
-    borderBottomColor: RED,
-  },
-
-  activeTabText: {
-    color: WHITE,
-    fontSize: 9,
-    fontWeight: '900',
-  },
-
-  inactiveTab: {
-    paddingVertical: 12,
-    paddingHorizontal: 13,
-  },
-
-  inactiveTabText: {
+  storyExcerpt: {
     color: GREY,
-    fontSize: 9,
-    fontWeight: '900',
-  },
-
-  /* =========================
-     NEWS CARD
-  ========================= */
-
-  newsCard: {
-    marginHorizontal: 20,
-    marginBottom: 12,
-    backgroundColor: SURFACE,
-    borderRadius: 6,
-    overflow: 'hidden',
-    flexDirection: 'row',
-    minHeight: 125,
-  },
-
-  newsImage: {
-    width: 125,
-    backgroundColor: SURFACE_LIGHT,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  newsContent: {
-    flex: 1,
-    padding: 13,
-  },
-
-  newsTitle: {
-    color: WHITE,
-    fontSize: 14,
-    lineHeight: 19,
-    fontWeight: '800',
-  },
-
-  /* =========================
-     COMMUNITY
-  ========================= */
-
-  communitySection: {
-    marginTop: 45,
-    marginHorizontal: 20,
-    backgroundColor: RED,
-    padding: 25,
-    borderRadius: 7,
-    overflow: 'hidden',
-  },
-
-  communityAccent: {
-    position: 'absolute',
-    right: -20,
-    top: -20,
-    width: 100,
-    height: 100,
-    borderRadius: 100,
-    backgroundColor: RED_DARK,
-  },
-
-  communityEyebrow: {
-    color: WHITE,
     fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 2,
-    marginBottom: 13,
+    lineHeight: 15,
+    marginTop: 7,
   },
 
-  communityTitle: {
-    color: WHITE,
-    fontSize: 28,
-    lineHeight: 31,
-    fontWeight: '900',
-  },
-
-  communityText: {
-    color: WHITE,
-    opacity: 0.85,
-    fontSize: 13,
-    lineHeight: 20,
-    marginTop: 15,
-  },
-
-  communityButton: {
-    alignSelf: 'flex-start',
-    backgroundColor: YELLOW,
-    paddingHorizontal: 18,
-    paddingVertical: 13,
-    borderRadius: 4,
-    marginTop: 22,
-  },
-
-  communityButtonText: {
-    color: BLACK,
-    fontSize: 10,
-    fontWeight: '900',
-  },
-
-  /* =========================
-     ON AIR
-  ========================= */
+  /* ON AIR */
 
   onAirCard: {
-    marginHorizontal: 20,
-    backgroundColor: SURFACE,
-    borderWidth: 1,
-    borderColor: RED,
-    borderRadius: 7,
+    backgroundColor: RED,
     padding: 20,
   },
 
   onAirTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
 
-  onAirStatus: {
+  onAirLive: {
     flexDirection: 'row',
     alignItems: 'center',
   },
 
-  onAirStatusText: {
-    color: RED,
+  onAirLiveText: {
+    color: WHITE,
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 1,
   },
 
+  onAirTime: {
+    color: WHITE,
+    fontSize: 10,
+    fontWeight: '900',
+  },
+
   onAirTitle: {
     color: WHITE,
-    fontSize: 27,
+    fontSize: 25,
     fontWeight: '900',
-    marginTop: 22,
+    marginTop: 28,
   },
 
-  onAirSubtitle: {
-    color: GREY,
-    fontSize: 13,
-    lineHeight: 20,
-    marginTop: 6,
-    maxWidth: 260,
+  onAirPresenter: {
+    color: WHITE,
+    opacity: 0.75,
+    fontSize: 11,
+    marginTop: 4,
   },
 
-  bigPlayButton: {
-    position: 'absolute',
-    right: 20,
-    bottom: 20,
-    width: 58,
-    height: 58,
-    borderRadius: 58,
-    backgroundColor: YELLOW,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  playIcon: {
-    color: BLACK,
-    fontSize: 20,
-    marginLeft: 3,
-  },
-
-  /* =========================
-     ADVERTISE
-  ========================= */
-
-  advertiseCard: {
-    marginHorizontal: 20,
-    marginTop: 18,
-    backgroundColor: WHITE,
-    padding: 25,
-    borderRadius: 7,
-  },
-
-  advertiseTop: {
+  waveRow: {
+    height: 55,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 4,
+    marginTop: 18,
   },
 
-  advertiseLabel: {
-    color: RED,
+  wave: {
+    width: 5,
+    backgroundColor: WHITE,
+    opacity: 0.8,
+    borderRadius: 3,
+  },
+
+  /* COMMUNITY */
+
+  communityCard: {
+    backgroundColor: SURFACE,
+    borderWidth: 1,
+    borderColor: BORDER,
+    padding: 22,
+    marginTop: 34,
+  },
+
+  communityEyebrow: {
+    color: YELLOW,
     fontSize: 9,
     fontWeight: '900',
-    letterSpacing: 1.5,
+    letterSpacing: 1,
   },
 
-  yellowBox: {
-    width: 38,
-    height: 38,
-    backgroundColor: YELLOW,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 4,
-  },
-
-  yellowBoxText: {
-    color: BLACK,
-    fontSize: 12,
+  communityTitle: {
+    color: WHITE,
+    fontSize: 31,
     fontWeight: '900',
+    lineHeight: 31,
+    marginTop: 12,
+  },
+
+  communityText: {
+    color: GREY,
+    fontSize: 12,
+    lineHeight: 19,
+    marginTop: 15,
+  },
+
+  communityButton: {
+    borderWidth: 1,
+    borderColor: RED,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    alignSelf: 'flex-start',
+    marginTop: 20,
+  },
+
+  communityButtonText: {
+    color: WHITE,
+    fontSize: 9,
+    fontWeight: '900',
+  },
+
+  /* ADVERTISE */
+
+  advertiseCard: {
+    backgroundColor: YELLOW,
+    padding: 22,
+    marginTop: 12,
+  },
+
+  advertiseSmall: {
+    color: BLACK,
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 1,
   },
 
   advertiseTitle: {
     color: BLACK,
     fontSize: 31,
-    lineHeight: 33,
     fontWeight: '900',
-    marginTop: 20,
-  },
-
-  advertiseText: {
-    color: '#555555',
-    fontSize: 13,
-    lineHeight: 20,
+    lineHeight: 31,
     marginTop: 12,
   },
 
-  outlineButton: {
-    alignSelf: 'flex-start',
-    borderWidth: 2,
-    borderColor: BLACK,
-    paddingHorizontal: 16,
+  advertiseText: {
+    color: BLACK,
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 13,
+  },
+
+  advertiseButton: {
+    backgroundColor: BLACK,
     paddingVertical: 12,
-    borderRadius: 4,
+    paddingHorizontal: 16,
+    alignSelf: 'flex-start',
     marginTop: 20,
   },
 
-  outlineButtonText: {
-    color: BLACK,
+  advertiseButtonText: {
+    color: WHITE,
     fontSize: 9,
     fontWeight: '900',
-    letterSpacing: 0.7,
   },
 
-  /* =========================
-     HIGHLIGHTS
-  ========================= */
-
-  highlightsGrid: {
-    marginHorizontal: 20,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-
-  highlight: {
-    width: '48%',
-    backgroundColor: SURFACE,
-    borderRadius: 6,
-    overflow: 'hidden',
-    paddingBottom: 12,
-  },
-
-  highlightImage: {
-    height: 105,
-    backgroundColor: SURFACE_LIGHT,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  highlightTitle: {
-    color: WHITE,
-    fontSize: 12,
-    fontWeight: '800',
-    paddingHorizontal: 12,
-    paddingTop: 10,
-  },
-
-  highlightArrow: {
-    color: YELLOW,
-    fontSize: 16,
-    fontWeight: '900',
-    paddingHorizontal: 12,
-    marginTop: 5,
-  },
-
-  /* =========================
-     FOOTER
-  ========================= */
+  /* FOOTER */
 
   footer: {
-    marginTop: 55,
-    paddingHorizontal: 22,
-    paddingTop: 35,
-    paddingBottom: 25,
-    backgroundColor: DARK,
-    borderTopWidth: 1,
-    borderTopColor: BORDER,
+    alignItems: 'center',
+    paddingVertical: 38,
   },
 
   footerLogo: {
-    color: WHITE,
-    fontSize: 28,
+    color: RED,
+    fontSize: 21,
     fontWeight: '900',
+    letterSpacing: 1,
   },
 
-  footerTagline: {
+  footerText: {
     color: GREY,
     fontSize: 8,
-    fontWeight: '800',
-    letterSpacing: 1.3,
-    marginTop: 3,
-  },
-
-  footerLine: {
-    height: 1,
-    backgroundColor: BORDER,
-    marginVertical: 22,
-  },
-
-  footerContact: {
-    color: GREY,
-    fontSize: 12,
-    marginBottom: 7,
-  },
-
-  copyright: {
-    color: '#555555',
-    fontSize: 10,
-    marginTop: 25,
-  },
-
-  /* =========================
-     BOTTOM NAV
-  ========================= */
-
-  bottomNav: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 72,
-    backgroundColor: BLACK,
-    borderTopWidth: 1,
-    borderTopColor: BORDER,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    paddingBottom: 5,
-  },
-
-  navItem: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-  },
-
-  navIcon: {
-    color: GREY,
-    fontSize: 20,
-    marginBottom: 4,
-  },
-
-  navIconActive: {
-    color: RED,
-  },
-
-  navLabel: {
-    color: GREY,
-    fontSize: 7,
     fontWeight: '900',
+    letterSpacing: 1,
+    marginTop: 6,
+  },
+
+  footerCopyright: {
+    color: '#555555',
+    fontSize: 7,
+    marginTop: 12,
     letterSpacing: 0.5,
   },
 
-  navLabelActive: {
+  bottomSpace: {
+    height: 65,
+  },
+
+  /* EMPTY */
+
+  emptyBox: {
+    backgroundColor: SURFACE,
+    borderWidth: 1,
+    borderColor: BORDER,
+    padding: 25,
+    alignItems: 'center',
+  },
+
+  emptyText: {
+    color: GREY,
+    fontSize: 11,
+  },
+
+  /* ERROR */
+
+  errorBox: {
+    backgroundColor: '#241010',
+    borderWidth: 1,
+    borderColor: RED_DARK,
+    padding: 16,
+    marginBottom: 15,
+  },
+
+  errorTitle: {
+    color: RED,
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+
+  errorText: {
+    color: GREY,
+    fontSize: 11,
+    marginTop: 6,
+    lineHeight: 17,
+  },
+
+  retryButton: {
+    backgroundColor: RED,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    marginTop: 12,
+  },
+
+  retryText: {
     color: WHITE,
+    fontSize: 9,
+    fontWeight: '900',
+  },
+
+  /* LOADING */
+
+  loadingScreen: {
+    flex: 1,
+    backgroundColor: BLACK,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  loadingLogo: {
+    width: 70,
+    height: 70,
+    backgroundColor: RED,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 25,
+  },
+
+  loadingLogoText: {
+    color: WHITE,
+    fontSize: 24,
+    fontWeight: '900',
+  },
+
+  loadingSpinner: {
+    marginBottom: 14,
+  },
+
+  loadingText: {
+    color: WHITE,
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1.5,
+  },
+
+  loadingSubtext: {
+    color: GREY,
+    fontSize: 10,
+    marginTop: 7,
   },
 });
