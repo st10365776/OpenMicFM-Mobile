@@ -281,6 +281,38 @@ export default function HomeScreen() {
           </View>
         </View>
 
+
+        {/* =================================================
+            ADDED: LOGIN AND REGISTER BUTTONS
+            These open the separate mobile authentication pages.
+            They do not change the Home page API or existing content.
+        ================================================= */}
+
+        <View style={styles.authActions}>
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={() => router.push('/login')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.loginButtonText}>
+              LOG IN
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.registerButton}
+            onPress={() => router.push('/register')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.registerButtonText}>
+              CREATE ACCOUNT
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* END OF ADDED LOGIN AND REGISTER BUTTONS */}
+
+
         {/* =================================================
             ERROR
         ================================================= */}
@@ -774,6 +806,54 @@ function EmptyState({
 ========================================================= */
 
 const styles = StyleSheet.create({
+
+
+  
+/* =========================================================
+   ADDED: LOGIN AND REGISTER BUTTON STYLES
+========================================================= */
+
+authActions: {
+  flexDirection: 'row',
+  gap: 10,
+  marginBottom: 22,
+},
+
+loginButton: {
+  flex: 1,
+  borderWidth: 1,
+  borderColor: RED,
+  borderRadius: 8,
+  paddingVertical: 13,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+
+loginButtonText: {
+  color: WHITE,
+  fontSize: 12,
+  fontWeight: '900',
+  letterSpacing: 1,
+},
+
+registerButton: {
+  flex: 1,
+  backgroundColor: RED,
+  borderRadius: 8,
+  paddingVertical: 13,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+
+registerButtonText: {
+  color: WHITE,
+  fontSize: 12,
+  fontWeight: '900',
+  letterSpacing: 0.5,
+},
+
+/* END OF ADDED LOGIN AND REGISTER STYLES */
+
   screen: {
     flex: 1,
     backgroundColor: BLACK,
@@ -1405,4 +1485,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     marginTop: 7,
   },
+
+
 });
