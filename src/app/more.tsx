@@ -1,57 +1,32 @@
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-	Alert,
-	Pressable,
-	ScrollView,
-	StatusBar,
-	StyleSheet,
-	Text,
-	View,
+    Alert,
+    Pressable,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-
-type ThemeMode = 'dark' | 'light';
+import { useAppContext } from '../context/app-context';
 
 const audioQualities = ['Low', 'Standard', 'High'] as const;
 
 export default function MoreScreen() {
 	const router = useRouter();
-	const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
+	const { themeMode, setThemeMode, colors, user, signOut } = useAppContext();
 	const [audioQuality, setAudioQuality] = useState<(typeof audioQualities)[number]>('Standard');
 	const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 	const [privacyExpanded, setPrivacyExpanded] = useState(false);
 
 	const isDark = themeMode === 'dark';
-	const colors = isDark
-		? {
-			background: '#101114',
-			surface: '#1B1D22',
-			surfaceAlt: '#292C31',
-			border: '#292B31',
-			divider: '#2B2D33',
-			heading: '#FFFFFF',
-			text: '#F5F5F6',
-			muted: '#9699A2',
-			label: '#8D909A',
-			hint: '#696C75',
-			chevron: '#777A84',
-			selectedText: '#101114',
-		}
-		: {
-			background: '#F5F6F2',
-			surface: '#FFFFFF',
-			surfaceAlt: '#E9EBE5',
-			border: '#E1E3DC',
-			divider: '#E7E9E3',
-			heading: '#171914',
-			text: '#252820',
-			muted: '#62675D',
-			label: '#73786E',
-			hint: '#858A80',
-			chevron: '#8B9086',
-			selectedText: '#171914',
-		};
+	const divider = colors.border;
+	const heading = colors.text;
+	const label = colors.muted;
+	const hint = colors.subtle;
+	const chevron = colors.muted;
 
 	const showAudioQualityOptions = () => {
 		Alert.alert('Audio quality', 'Choose your preferred playback quality.', [
@@ -62,14 +37,28 @@ export default function MoreScreen() {
 		]);
 	};
 
+	const confirmSignOut = () => {
+		Alert.alert('Sign out', 'Are you sure you want to sign out?', [
+			{ text: 'Cancel', style: 'cancel' },
+			{
+				text: 'Sign out',
+				style: 'destructive',
+				onPress: () => {
+					signOut();
+					router.replace('/');
+				},
+			},
+		]);
+	};
+
 	return (
 		<SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
 			<StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 			<ScrollView contentContainerStyle={styles.content}>
-				<Text style={styles.eyebrow}>OPENMICFM</Text>
-				<Text style={[styles.heading, { color: colors.heading }]}>More</Text>
+				<Text style={[styles.eyebrow, { color: colors.red }]}>OPENMICFM</Text>
+				<Text style={[styles.heading, { color: heading }]}>More</Text>
 
-				<Text style={[styles.sectionLabel, { color: colors.label }]}>YOUR PROFILE</Text>
+				<Text style={[styles.sectionLabel, { color: label }]}>YOUR PROFILE</Text>
 				<Pressable
 					style={({ pressed }) => [
 						styles.profileCard,
@@ -77,24 +66,26 @@ export default function MoreScreen() {
 						pressed && styles.pressed,
 					]}
 					accessibilityRole="button"
-					accessibilityLabel="Sign in or manage your profile"
-					onPress={() => router.push('/')}
+					accessibilityLabel={user ? 'View your profile' : 'Sign in or create an account'}
+					onPress={() => router.push('/profile' as never)}
 				>
-					<View style={styles.avatar}>
+					<View style={[styles.avatar, { backgroundColor: colors.red }]}>
 						<Text style={styles.avatarText}>OM</Text>
 					</View>
 					<View style={styles.profileCopy}>
-						<Text style={[styles.profileName, { color: colors.heading }]}>Your profile</Text>
+						<Text style={[styles.profileName, { color: heading }]}>
+							{user?.fullName || (user ? 'Your profile' : 'Sign in or register')}
+						</Text>
 						<Text style={[styles.profileDetail, { color: colors.muted }]}>
-							Manage your account and playlists
+							{user?.email || 'View your account details'}
 						</Text>
 					</View>
-					<Text style={[styles.chevron, { color: colors.chevron }]}>›</Text>
+					<Text style={[styles.chevron, { color: chevron }]}>›</Text>
 				</Pressable>
 
 				<View style={styles.sectionHeadingRow}>
-					<Text style={[styles.sectionLabel, { color: colors.label }]}>SETTINGS</Text>
-					<Text style={[styles.sectionHint, { color: colors.hint }]}>Make it yours</Text>
+					<Text style={[styles.sectionLabel, { color: label }]}>SETTINGS</Text>
+					<Text style={[styles.sectionHint, { color: hint }]}>Make it yours</Text>
 				</View>
 
 				<View
@@ -103,13 +94,13 @@ export default function MoreScreen() {
 						{ backgroundColor: colors.surface, borderColor: colors.border },
 					]}
 				>
-					<View style={[styles.appearanceRow, styles.divider, { borderBottomColor: colors.divider }]}>
+					<View style={[styles.appearanceRow, styles.divider, { borderBottomColor: divider }]}>
 						<View style={[styles.iconBox, { backgroundColor: colors.surfaceAlt }]}>
-							<Text style={styles.iconText}>◐</Text>
+							<Text style={[styles.iconText, { color: colors.red }]}>◐</Text>
 						</View>
 						<View style={styles.settingCopy}>
 							<Text style={[styles.settingTitle, { color: colors.text }]}>Appearance</Text>
-							<Text style={[styles.settingDetail, { color: colors.label }]}>
+							<Text style={[styles.settingDetail, { color: label }]}>
 								Choose light or dark mode
 							</Text>
 						</View>
@@ -126,7 +117,7 @@ export default function MoreScreen() {
 										style={[
 											styles.modeButton,
 											selected && styles.selectedModeButton,
-											selected && { backgroundColor: '#B8F36B' },
+											selected && { backgroundColor: colors.yellow },
 										]}
 										onPress={() => setThemeMode(mode)}
 										accessibilityRole="radio"
@@ -136,7 +127,7 @@ export default function MoreScreen() {
 										<Text
 											style={[
 												styles.modeButtonText,
-												{ color: selected ? colors.selectedText : colors.muted },
+												{ color: selected ? '#000000' : colors.muted },
 											]}
 										>
 											{mode === 'light' ? 'Light' : 'Dark'}
@@ -151,7 +142,7 @@ export default function MoreScreen() {
 						style={({ pressed }) => [
 							styles.settingRow,
 							styles.divider,
-							{ borderBottomColor: colors.divider },
+							{ borderBottomColor: divider },
 							pressed && styles.pressed,
 						]}
 						onPress={showAudioQualityOptions}
@@ -159,22 +150,22 @@ export default function MoreScreen() {
 						accessibilityLabel={`Audio and playback. Quality ${audioQuality}`}
 					>
 						<View style={[styles.iconBox, { backgroundColor: colors.surfaceAlt }]}>
-							<Text style={styles.iconText}>♪</Text>
+							<Text style={[styles.iconText, { color: colors.red }]}>♪</Text>
 						</View>
 						<View style={styles.settingCopy}>
 							<Text style={[styles.settingTitle, { color: colors.text }]}>Audio & playback</Text>
-							<Text style={[styles.settingDetail, { color: colors.label }]}>
+							<Text style={[styles.settingDetail, { color: label }]}>
 								Playback quality: {audioQuality}
 							</Text>
 						</View>
-						<Text style={[styles.chevron, { color: colors.chevron }]}>›</Text>
+						<Text style={[styles.chevron, { color: chevron }]}>›</Text>
 					</Pressable>
 
 					<Pressable
 						style={({ pressed }) => [
 							styles.settingRow,
 							styles.divider,
-							{ borderBottomColor: colors.divider },
+							{ borderBottomColor: divider },
 							pressed && styles.pressed,
 						]}
 						onPress={() => setNotificationsEnabled((enabled) => !enabled)}
@@ -183,18 +174,18 @@ export default function MoreScreen() {
 						accessibilityLabel="Notifications"
 					>
 						<View style={[styles.iconBox, { backgroundColor: colors.surfaceAlt }]}>
-							<Text style={styles.iconText}>◉</Text>
+							<Text style={[styles.iconText, { color: colors.red }]}>◉</Text>
 						</View>
 						<View style={styles.settingCopy}>
 							<Text style={[styles.settingTitle, { color: colors.text }]}>Notifications</Text>
-							<Text style={[styles.settingDetail, { color: colors.label }]}>
+							<Text style={[styles.settingDetail, { color: label }]}>
 								{notificationsEnabled ? 'Notifications are on' : 'Notifications are off'}
 							</Text>
 						</View>
 						<View
 							style={[
 								styles.toggleTrack,
-								notificationsEnabled ? styles.toggleOn : { backgroundColor: colors.surfaceAlt },
+								notificationsEnabled ? [styles.toggleOn, { backgroundColor: colors.red }] : { backgroundColor: colors.surfaceAlt },
 							]}
 						>
 							<View style={[styles.toggleThumb, notificationsEnabled && styles.toggleThumbOn]} />
@@ -205,7 +196,7 @@ export default function MoreScreen() {
 						style={({ pressed }) => [
 							styles.settingRow,
 							!privacyExpanded && styles.divider,
-							!privacyExpanded && { borderBottomColor: colors.divider },
+							!privacyExpanded && { borderBottomColor: divider },
 							pressed && styles.pressed,
 						]}
 						onPress={() => setPrivacyExpanded((expanded) => !expanded)}
@@ -213,30 +204,30 @@ export default function MoreScreen() {
 						accessibilityState={{ expanded: privacyExpanded }}
 					>
 						<View style={[styles.iconBox, { backgroundColor: colors.surfaceAlt }]}>
-							<Text style={styles.iconText}>⌑</Text>
+							<Text style={[styles.iconText, { color: colors.red }]}>⌑</Text>
 						</View>
 						<View style={styles.settingCopy}>
 							<Text style={[styles.settingTitle, { color: colors.text }]}>Privacy & security</Text>
-							<Text style={[styles.settingDetail, { color: colors.label }]}>
+							<Text style={[styles.settingDetail, { color: label }]}>
 								Your account and preferences
 							</Text>
 						</View>
-						<Text style={[styles.chevron, { color: colors.chevron }]}>
+						<Text style={[styles.chevron, { color: chevron }]}>
 							{privacyExpanded ? '⌄' : '›'}
 						</Text>
 					</Pressable>
 					{privacyExpanded && (
-						<View style={[styles.privacyDetail, { borderBottomColor: colors.divider }]}>
+						<View style={[styles.privacyDetail, { borderBottomColor: divider }]}>
 							<Text style={[styles.privacyText, { color: colors.muted }]}>
 								Your account details and preferences are managed securely. Sign in to review
 								your account settings.
 							</Text>
 							<Pressable
-								onPress={() => router.push('/')}
+								onPress={() => router.push('/login' as never)}
 								accessibilityRole="button"
 								style={({ pressed }) => pressed && styles.pressed}
 							>
-								<Text style={styles.privacyAction}>SIGN IN</Text>
+								<Text style={[styles.privacyAction, { color: colors.red }]}>SIGN IN</Text>
 							</Pressable>
 						</View>
 					)}
@@ -252,19 +243,44 @@ export default function MoreScreen() {
 						accessibilityRole="button"
 					>
 						<View style={[styles.iconBox, { backgroundColor: colors.surfaceAlt }]}>
-							<Text style={styles.iconText}>?</Text>
+							<Text style={[styles.iconText, { color: colors.red }]}>?</Text>
 						</View>
 						<View style={styles.settingCopy}>
 							<Text style={[styles.settingTitle, { color: colors.text }]}>Help & support</Text>
-							<Text style={[styles.settingDetail, { color: colors.label }]}>
+							<Text style={[styles.settingDetail, { color: label }]}>
 								Get help with OpenMicFM
 							</Text>
 						</View>
-						<Text style={[styles.chevron, { color: colors.chevron }]}>›</Text>
+						<Text style={[styles.chevron, { color: chevron }]}>›</Text>
 					</Pressable>
 				</View>
 
-				<Text style={[styles.version, { color: colors.hint }]}>OPENMICFM  ·  VERSION 1.0.0</Text>
+				{user ? (
+					<Pressable
+						style={({ pressed }) => [
+							styles.signOutButton,
+							{ borderColor: colors.red },
+							pressed && styles.pressed,
+						]}
+						onPress={confirmSignOut}
+						accessibilityRole="button"
+					>
+						<Text style={[styles.signOutText, { color: colors.red }]}>SIGN OUT</Text>
+					</Pressable>
+				) : (
+					<Pressable
+						style={({ pressed }) => [
+							styles.signOutButton,
+							{ borderColor: colors.red },
+							pressed && styles.pressed,
+						]}
+						onPress={() => router.push('/login' as never)}
+						accessibilityRole="button"
+					>
+						<Text style={[styles.signOutText, { color: colors.red }]}>SIGN IN</Text>
+					</Pressable>
+				)}
+				<Text style={[styles.version, { color: hint }]}>OPENMICFM  ·  VERSION 1.0.0</Text>
 			</ScrollView>
 		</SafeAreaView>
 	);
@@ -280,7 +296,7 @@ const styles = StyleSheet.create({
 		paddingBottom: 36,
 	},
 	eyebrow: {
-		color: '#B8F36B',
+		color: '#D71920',
 		fontSize: 11,
 		fontWeight: '800',
 		letterSpacing: 2.2,
@@ -308,14 +324,14 @@ const styles = StyleSheet.create({
 	},
 	avatar: {
 		alignItems: 'center',
-		backgroundColor: '#B8F36B',
+		backgroundColor: '#D71920',
 		borderRadius: 24,
 		height: 48,
 		justifyContent: 'center',
 		width: 48,
 	},
 	avatarText: {
-		color: '#101114',
+		color: '#FFFFFF',
 		fontSize: 15,
 		fontWeight: '900',
 	},
@@ -368,7 +384,7 @@ const styles = StyleSheet.create({
 		width: 40,
 	},
 	iconText: {
-		color: '#B8F36B',
+		color: '#D71920',
 		fontSize: 18,
 		fontWeight: '700',
 	},
@@ -417,7 +433,7 @@ const styles = StyleSheet.create({
 		width: 42,
 	},
 	toggleOn: {
-		backgroundColor: '#B8F36B',
+		backgroundColor: '#D71920',
 	},
 	toggleThumb: {
 		backgroundColor: '#FFFFFF',
@@ -453,5 +469,17 @@ const styles = StyleSheet.create({
 		letterSpacing: 1.2,
 		marginTop: 30,
 		textAlign: 'center',
+	},
+	signOutButton: {
+		alignItems: 'center',
+		borderRadius: 12,
+		borderWidth: 1,
+		marginTop: 26,
+		paddingVertical: 15,
+	},
+	signOutText: {
+		fontSize: 12,
+		fontWeight: '900',
+		letterSpacing: 1.2,
 	},
 });
