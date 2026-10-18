@@ -210,6 +210,13 @@ export default function HomeScreen() {
 
   const currentShow = shows[0];
 
+  const openStory = (post: Post) => {
+    router.push({
+      pathname: '/story',
+      params: { id: String(post.id) },
+    });
+  };
+
   /* =======================================================
      LOADING
   ======================================================= */
@@ -376,12 +383,12 @@ export default function HomeScreen() {
         </View>
 
         {/* =================================================
-            TOP 10 SONGS
+            TRENDING SONGS IN SA
         ================================================= */}
 
         <SectionHeader
           number="01"
-          title="TOP 10 SONGS"
+          title="TRENDING SONGS IN SA"
           action="MUSIC"
           onPress={() => router.push('/music')}
         />
@@ -420,6 +427,7 @@ export default function HomeScreen() {
                 post={post}
                 imageUrl={imageUrl(post.image)}
                 featured={index === 0}
+                onPress={() => openStory(post)}
               />
             ))}
           </View>
@@ -445,6 +453,7 @@ export default function HomeScreen() {
                 key={`sport-${post.id}`}
                 post={post}
                 imageUrl={imageUrl(post.image)}
+                onPress={() => openStory(post)}
               />
             ))}
           </View>
@@ -461,7 +470,20 @@ export default function HomeScreen() {
           title="ON AIR"
         />
 
-        <View style={styles.onAirCard}>
+        <TouchableOpacity
+          style={styles.onAirCard}
+          activeOpacity={0.88}
+          onPress={() => {
+            if (currentShow) {
+              router.push({
+                pathname: '/show/[id]',
+                params: { id: String(currentShow.id) },
+              });
+            } else {
+              router.push('/shows');
+            }
+          }}
+        >
           <View style={styles.onAirTop}>
             <View style={styles.onAirLive}>
               <View style={styles.liveDot} />
@@ -500,7 +522,7 @@ export default function HomeScreen() {
               )
             )}
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* =================================================
             COMMUNITY
@@ -689,17 +711,21 @@ function StoryCard({
   post,
   imageUrl,
   featured = false,
+  onPress,
 }: {
   post: Post;
   imageUrl: string | null;
   featured?: boolean;
+  onPress: () => void;
 }) {
   return (
-    <View
+    <TouchableOpacity
       style={[
         styles.storyCard,
         featured && styles.featuredStoryCard,
       ]}
+      activeOpacity={0.85}
+      onPress={onPress}
     >
       {imageUrl ? (
         <Image
@@ -747,7 +773,7 @@ function StoryCard({
           </Text>
         ) : null}
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

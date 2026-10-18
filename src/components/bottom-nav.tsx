@@ -60,7 +60,8 @@ export default function BottomNav() {
         const isActive =
           item.route === '/'
             ? pathname === '/'
-            : pathname.startsWith(item.route);
+            : pathname.startsWith(item.route) ||
+              (item.route === '/shows' && pathname.startsWith('/show/'));
 
         return (
           <TouchableOpacity

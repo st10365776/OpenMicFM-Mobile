@@ -146,6 +146,13 @@ export default function NewsScreen() {
     loadNews();
   };
 
+  const openStory = (post: Post) => {
+    router.push({
+      pathname: '/story',
+      params: { id: String(post.id) },
+    });
+  };
+
   /* =======================================================
      FILTER
   ======================================================= */
@@ -361,6 +368,7 @@ export default function NewsScreen() {
             imageUrl={imageUrl(
               featuredPost.image
             )}
+            onPress={() => openStory(featuredPost)}
           />
         ) : (
           <EmptyState text="No stories available in this category." />
@@ -383,6 +391,7 @@ export default function NewsScreen() {
                   key={post.id}
                   post={post}
                   imageUrl={imageUrl(post.image)}
+                  onPress={() => openStory(post)}
                 />
               ))}
             </View>
@@ -519,12 +528,18 @@ function CategoryButton({
 function FeaturedNewsCard({
   post,
   imageUrl,
+  onPress,
 }: {
   post: Post;
   imageUrl: string | null;
+  onPress: () => void;
 }) {
   return (
-    <View style={styles.featuredCard}>
+    <TouchableOpacity
+      style={styles.featuredCard}
+      activeOpacity={0.85}
+      onPress={onPress}
+    >
       {imageUrl ? (
         <Image
           source={{ uri: imageUrl }}
@@ -563,7 +578,7 @@ function FeaturedNewsCard({
           </Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -574,12 +589,18 @@ function FeaturedNewsCard({
 function NewsRow({
   post,
   imageUrl,
+  onPress,
 }: {
   post: Post;
   imageUrl: string | null;
+  onPress: () => void;
 }) {
   return (
-    <View style={styles.newsRow}>
+    <TouchableOpacity
+      style={styles.newsRow}
+      activeOpacity={0.85}
+      onPress={onPress}
+    >
       {imageUrl ? (
         <Image
           source={{ uri: imageUrl }}
@@ -615,7 +636,7 @@ function NewsRow({
           </Text>
         ) : null}
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
