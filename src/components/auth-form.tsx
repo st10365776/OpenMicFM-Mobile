@@ -12,10 +12,17 @@ import {
 } from 'react-native';
 
 import { useRouter } from 'expo-router';
+import {
+  useAppContext,
+  useThemedStyles,
+  type ListenerProfile,
+} from '../context/app-context';
+
+const API_URL =
+  'https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net';
 
 /* =========================================================
    API
-========================================================= */
 
 const API_URL =
   'https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net';
@@ -23,7 +30,6 @@ const API_URL =
 /* =========================================================
    OPENMIC FM - LOGIN AND REGISTRATION
    FRONTEND DESIGN
-========================================================= */
 
 const RED = '#D71920';
 const WHITE = '#FFFFFF';
@@ -38,6 +44,8 @@ type AuthProps = {
 
 export default function AuthForm({ mode }: AuthProps) {
   const router = useRouter();
+  const { signIn } = useAppContext();
+  const styles = useThemedStyles(baseStyles);
 
   const isRegister = mode === 'register';
 
@@ -52,6 +60,7 @@ export default function AuthForm({ mode }: AuthProps) {
 
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   /* =======================================================
      LOGIN AND REGISTRATION VALIDATION
@@ -98,6 +107,80 @@ export default function AuthForm({ mode }: AuthProps) {
       }
     }
 
+    setSubmitting(true);
+    try {
+      const response = await fetch(
+        `${API_URL}/api/listeners/${isRegister ? 'register' : 'login'}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(
+            isRegister
+              ? { fullName: name.trim(), email: cleanEmail, password }
+              : { email: cleanEmail, password }
+          ),
+        }
+      );
+
+      let data: {
+        token?: unknown;
+        user?: ListenerProfile;
+        error?: unknown;
+        message?: unknown;
+      };
+      try {
+        data = await response.json();
+      } catch {
+        setError('The server returned an invalid response. Please try again.');
+        return;
+      }
+
+      if (!response.ok) {
+        setError(
+          typeof data.error === 'string'
+            ? data.error
+            : typeof data.message === 'string'
+              ? data.message
+              : `Request failed (${response.status}).`
+        );
+        return;
+      }
+
+      if (isRegister) {
+        Alert.alert(
+          'Registration successful',
+          'Your account has been created. You can now log in.',
+          [{ text: 'Go to Login', onPress: () => router.replace('/login') }]
+        );
+        return;
+      }
+
+      if (typeof data.token !== 'string' || !data.token) {
+        setError('The login response did not include an authentication token.');
+        return;
+      }
+
+      const profile = data.user || {};
+      signIn(data.token, {
+        ...profile,
+        fullName:
+          typeof profile.fullName === 'string'
+            ? profile.fullName
+            : typeof profile.name === 'string'
+              ? profile.name
+              : cleanEmail,
+        email:
+          typeof profile.email === 'string' ? profile.email : cleanEmail,
+      });
+      router.replace('/profile' as never);
+    } catch (requestError) {
+      console.error('Azure listener authentication failed:', requestError);
+      setError(
+        'Cannot connect to the OpenMicFM account service. Check your connection and try again.'
+      );
+    } finally {
+      setSubmitting(false);
+    }
     Alert.alert(
       isRegister ? 'Registration ready' : 'Login ready',
       isRegister
@@ -239,9 +322,14 @@ export default function AuthForm({ mode }: AuthProps) {
           style={styles.submitButton}
           onPress={handleSubmit}
           activeOpacity={0.8}
+          disabled={submitting}
         >
           <Text style={styles.submitText}>
-            {isRegister ? 'CREATE ACCOUNT →' : 'LOG IN →'}
+            {submitting
+              ? 'PLEASE WAIT…'
+              : isRegister
+                ? 'CREATE ACCOUNT →'
+                : 'LOG IN →'}
           </Text>
         </TouchableOpacity>
 
@@ -295,7 +383,7 @@ export default function AuthForm({ mode }: AuthProps) {
    STYLING - LOGIN AND REGISTRATION PAGES
 ========================================================= */
 
-const styles = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: BLACK,

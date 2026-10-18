@@ -5,9 +5,9 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useAppContext } from '../context/app-context';
 
 const RED = '#D71920';
-const BLACK = '#000000';
 const WHITE = '#FFFFFF';
 const GREY = '#929292';
 const BORDER = '#292929';
@@ -21,6 +21,7 @@ type NavItem = {
 export default function BottomNav() {
   const router = useRouter();
   const pathname = usePathname();
+  const { colors } = useAppContext();
 
   const items: NavItem[] = [
     {
@@ -55,13 +56,19 @@ export default function BottomNav() {
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.surface, borderTopColor: colors.border },
+      ]}
+    >
       {items.map((item) => {
         const isActive =
           item.route === '/'
             ? pathname === '/'
             : pathname.startsWith(item.route) ||
-              (item.route === '/shows' && pathname.startsWith('/show/'));
+              (item.route === '/shows' && pathname.startsWith('/show/')) ||
+              (item.route === '/more' && pathname === '/profile');
 
         return (
           <TouchableOpacity
@@ -74,6 +81,7 @@ export default function BottomNav() {
               style={[
                 styles.icon,
                 isActive && styles.activeIcon,
+                { color: isActive ? colors.red : colors.muted },
               ]}
             >
               {item.icon}
@@ -83,6 +91,7 @@ export default function BottomNav() {
               style={[
                 styles.label,
                 isActive && styles.activeLabel,
+                { color: isActive ? colors.text : colors.muted },
               ]}
             >
               {item.label}
@@ -107,7 +116,7 @@ const styles = StyleSheet.create({
 
     height: 72,
 
-    backgroundColor: BLACK,
+    backgroundColor: '#000000',
 
     borderTopWidth: 1,
     borderTopColor: BORDER,
