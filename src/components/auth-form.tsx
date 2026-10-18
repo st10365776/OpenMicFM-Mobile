@@ -14,6 +14,12 @@ import {
 import { useRouter } from 'expo-router';
 
 /* =========================================================
+   API
+========================================================= */
+
+const API_URL =
+  'https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net';
+/* =========================================================
    OPENMIC FM - LOGIN AND REGISTRATION
    FRONTEND DESIGN
    Backend connection will be added later.
@@ -51,7 +57,7 @@ export default function AuthForm({ mode }: AuthProps) {
      LOGIN AND REGISTRATION VALIDATION
   ======================================================= */
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError('');
 
     const cleanEmail = email.trim().toLowerCase();
@@ -92,18 +98,83 @@ export default function AuthForm({ mode }: AuthProps) {
       }
     }
 
-    /* =====================================================
-       FRONTEND TEST ONLY
-       API authentication will be connected by backend team.
-    ===================================================== */
+   
+/* =====================================================
+   CONNECTING LOGIN AND REGISTRATION TO API
+===================================================== */
 
-    Alert.alert(
-      'Frontend Test Successful',
-      isRegister
-        ? 'Registration form is valid. Your account will be saved once the backend is connected.'
-        : 'Login form is valid. Account verification will be available once the backend is connected.'
+try {
+  const endpoint = isRegister
+    ? '/api/listeners/register'
+    : '/api/listeners/login';
+
+  const requestData = isRegister
+    ? {
+        fullName: name.trim(),
+        email: cleanEmail,
+        password: password,
+      }
+    : {
+        email: cleanEmail,
+        password: password,
+      };
+
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestData),
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    setError(
+      data?.error ||
+      `Request failed (${response.status}).`
     );
-  };
+    return;
+  }
+
+  if (isRegister) {
+  Alert.alert(
+    'Registration Successful',
+    'Your account has been created. You can now log in.',
+    [
+      {
+        text: 'Go to Login',
+        onPress: () => router.replace('/login'),
+      },
+    ]
+  );
+} else {
+  if (!data?.token) {
+    setError('Login response did not include a token.');
+    return;
+  }
+
+  Alert.alert(
+    'Login Successful',
+    `Welcome back, ${data?.user?.fullName || 'listener'}!`,
+    [
+      {
+        text: 'Continue to App',
+        onPress: () => router.replace('/'),
+      },
+    ]
+  );
+}
+
+} catch (error) {
+  setError(
+    'Cannot connect to the server. Please check your internet connection and API.'
+  );
+}
+
+}; // Closes handleSubmit
+
+/* ENDING */
 
   /* =======================================================
      SCREEN DESIGN
