@@ -289,36 +289,7 @@ export default function HomeScreen() {
         </View>
 
 
-        {/* =================================================
-            ADDED: LOGIN AND REGISTER BUTTONS
-            These open the separate mobile authentication pages.
-            They do not change the Home page API or existing content.
-        ================================================= */}
-
-        <View style={styles.authActions}>
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={() => router.push('/login')}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.loginButtonText}>
-              LOG IN
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.registerButton}
-            onPress={() => router.push('/register')}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.registerButtonText}>
-              CREATE ACCOUNT
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* END OF ADDED LOGIN AND REGISTER BUTTONS */}
-
+      
 
         {/* =================================================
             ERROR
