@@ -15,13 +15,14 @@ import { useRouter } from 'expo-router';
 
 /* =========================================================
    API
+========================================================= */
 
 const API_URL =
   'https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net';
+
 /* =========================================================
    OPENMIC FM - LOGIN AND REGISTRATION
    FRONTEND DESIGN
-   Backend connection will be added later.
 ========================================================= */
 
 const RED = '#D71920';
@@ -97,82 +98,19 @@ export default function AuthForm({ mode }: AuthProps) {
       }
     }
 
-   
-/* =====================================================
-   CONNECTING LOGIN AND REGISTRATION TO API
-
-try {
-  const endpoint = isRegister
-    ? '/api/listeners/register'
-    : '/api/listeners/login';
-
-  const requestData = isRegister
-    ? {
-        fullName: name.trim(),
-        email: cleanEmail,
-        password: password,
-      }
-    : {
-        email: cleanEmail,
-        password: password,
-      };
-
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestData),
-  });
-
-  const data = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    setError(
-      data?.error ||
-      `Request failed (${response.status}).`
+    Alert.alert(
+      isRegister ? 'Registration ready' : 'Login ready',
+      isRegister
+        ? 'Your account details look good. Connect the backend later to complete signup.'
+        : 'Your credentials look good. Connect the backend later to complete login.',
+      [
+        {
+          text: 'Continue',
+          onPress: () => router.replace(isRegister ? '/login' : '/'),
+        },
+      ]
     );
-    return;
-  }
-
-  if (isRegister) {
-  Alert.alert(
-    'Registration Successful',
-    'Your account has been created. You can now log in.',
-    [
-      {
-        text: 'Go to Login',
-        onPress: () => router.replace('/login'),
-      },
-    ]
-  );
-} else {
-  if (!data?.token) {
-    setError('Login response did not include a token.');
-    return;
-  }
-
-  Alert.alert(
-    'Login Successful',
-    `Welcome back, ${data?.user?.fullName || 'listener'}!`,
-    [
-      {
-        text: 'Continue to App',
-        onPress: () => router.replace('/'),
-      },
-    ]
-  );
-}
-
-} catch (error) {
-  setError(
-    'Cannot connect to the server. Please check your internet connection and API.'
-  );
-}
-
-}; // Closes handleSubmit
-
-/* ENDING */
+  };
 
   /* =======================================================
      SCREEN DESIGN
