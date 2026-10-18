@@ -1,117 +1,175 @@
-# OpenMicFM Mobile
+# OpenMicFM Mobile 🎙️
 
-OpenMicFM Mobile is a React Native application for the OpenMicFM community radio station in Gqeberha, South Africa. It presents the station's top songs, published news and sport stories, and current show information using data from the OpenMicFM API.
+**Your community. Your stories. Your sound.**
 
-The app is built with Expo SDK 57, React Native, TypeScript, and Expo Router. It targets iOS, Android, and the web.
+OpenMicFM Mobile is a cross-platform mobile application built for **OpenMicFM, a community radio station based in Gqeberha, South Africa**. The app brings the station's music, news, sports coverage, and show information into one accessible digital experience, keeping listeners connected to what's happening in their community.
+
+Built with React Native, Expo, TypeScript, and Expo Router, the application connects to the OpenMicFM API to deliver published content directly to listeners across iOS, Android, and the web.
+
+## About the App
+
+OpenMicFM Mobile extends the OpenMicFM experience beyond traditional radio broadcasting. It gives listeners a central place to explore featured songs, catch up on the latest stories, follow sporting news, and discover station programming.
+
+The application is designed around a simple, content-driven interface, with dedicated screens for music discovery, news, and sports. Content is retrieved from the station's backend, allowing the app to display the latest available information without maintaining a separate content catalogue.
 
 ## Features
 
-- **Home:** Displays the top 10 visible songs, recent non-sport stories, recent sport stories, and the first show returned by the API.
-- **News:** Lists published posts and filters them by All, Local, National, or Sport.
-- **Sport:** Shows published sport stories and offers filters for common sports including rugby, football, cricket, and tennis.
-- **Refresh and error handling:** Content screens support pull-to-refresh and show a retry action when the API cannot be reached.
-- **Responsive targets:** Expo is configured to run the application on iOS, Android, and web.
+### 🏠 Home — Your OpenMicFM Hub
 
-## Requirements
+The home screen brings together key content from across the station.
 
-- Node.js **22.13.x or newer**, as required by Expo SDK 57.
-- npm (the repository includes `package-lock.json`).
-- For device builds: Xcode and an iOS Simulator on macOS, or Android Studio and an Android emulator for Android.
+- **Top 10 Songs:** Discover the station's visible, ranked songs, including track titles, artists, and available artwork.
+- **Latest News:** Catch up on recently published non-sport stories.
+- **Sports Highlights:** Browse recent sports stories in a dedicated section.
+- **On-Air Information:** View information about the first show returned by the station's API, including available presenter and programme details.
+- **Content Refresh:** Reload the latest available content from the backend.
 
-See the [Expo SDK 57 documentation](https://docs.expo.dev/versions/v57.0.0/) for SDK-specific setup and compatibility details.
+### 📰 News — Stay Informed
 
-## Getting Started
+A dedicated news feed keeps listeners up to date with published stories.
 
-From the repository root, install the locked dependencies:
+- Browse published articles in one place.
+- Filter stories by All, Local, National, or Sport.
+- View article titles, excerpts, images, and other available publication details.
+- Pull down to refresh the latest content.
+- Retry loading content when the API is temporarily unavailable.
 
-```sh
-npm ci
-```
+### ⚽ Sports — Follow the Action
 
-Start the Expo development server:
+The sports screen provides a focused experience for sports-related news.
 
-```sh
-npm start
-```
+- Browse published sports stories.
+- Filter stories by common sporting categories, including rugby, football, cricket, and tennis.
+- Discover stories through their available titles, excerpts, and images.
+- Refresh the feed and retry failed requests.
 
-Use the Expo CLI prompts to open the app in a simulator or connected device. The platform-specific scripts are also available:
+Sport-specific filters use story text matching, so results depend on the wording of the available content.
 
-```sh
-npm run ios
-npm run android
-npm run web
-```
+### 📱 Cross-Platform Experience
 
-## Available Scripts
+OpenMicFM Mobile is designed to support:
 
-| Command | Description |
-| --- | --- |
-| `npm start` | Start the Expo development server. |
-| `npm run ios` | Start Expo and open the iOS target. |
-| `npm run android` | Start Expo and open the Android target. |
-| `npm run web` | Start Expo for web. |
-| `npm run lint` | Run Expo lint checks. |
-| `npm run reset-project` | Run the configured project reset script. |
+- **iOS** — Apple mobile devices.
+- **Android** — Android smartphones and tablets.
+- **Web** — Browser-based access to the application.
 
-## Screens and Navigation
+The interface uses React Native components and Expo's cross-platform tooling to share application logic across supported platforms.
 
-Expo Router maps files in `src/app` to application routes:
+## App Screens
 
-| Route | Screen | Behavior |
-| --- | --- | --- |
-| `/` | Home | Loads songs, posts, and shows. |
-| `/news` | News | Loads published posts and filters by category. |
-| `/sports` | Sport | Loads published sport posts and filters story text by sport. |
+| Screen | Purpose |
+|---|---|
+| Home | Featured music, recent news, sports stories, and show information |
+| News | Published articles with category filters |
+| Sports | Sports coverage with sport-specific filters |
+| Bottom Navigation | Shared navigation component for moving between app sections |
 
-The shared bottom navigation component is in `src/components/bottom-nav.tsx`. Its current Music, Shows, and More items point to routes that are not present in `src/app` yet.
+The current bottom navigation also includes Music, Shows, and More items. Their dedicated destination screens are planned but have not yet been implemented.
 
-## Backend and Data
+## Technology Stack
 
-The app currently uses this API base URL, defined directly in the screen source files:
+| Technology | Role |
+|---|---|
+| React Native | Cross-platform application interface |
+| Expo SDK 57 | Development platform and native application tooling |
+| TypeScript | Type-safe application development |
+| Expo Router | File-based routing and screen navigation |
+| REST API | Retrieves music, news, sports, and show data |
+| Microsoft Azure | Hosts the OpenMicFM backend API |
+| npm | Dependency and project script management |
 
-```text
-https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net
-```
+## Backend Integration
 
-The screens request the following endpoints:
+OpenMicFM Mobile consumes the OpenMicFM REST API to retrieve its content. The backend acts as the central source of information for the application.
 
-| Request | Used by | Purpose |
-| --- | --- | --- |
-| `GET /api/songs?public=1` | Home | Loads public songs; hidden songs are excluded, songs are sorted by rank, and at most 10 are displayed. |
-| `GET /api/posts?status=Published` | Home, News | Loads published posts. News can filter the results by post type. |
-| `GET /api/posts?status=Published&type=Sport` | Sport | Loads published sport posts. |
-| `GET /api/shows` | Home | Loads shows; the first result is used for the on-air panel. |
+**Content currently integrated:**
 
-Responses may be a JSON array or an object containing the corresponding `songs`, `posts`, or `shows` array. Song entries use fields such as `id`, `rank`, `title`, `artist`, `image`, and `visible`. Posts use `id`, `type`, `title`, `excerpt`, `body`, `image`, `status`, and optional publication dates. Show entries use `name` or `title`, `presenter`, and optional schedule and image fields.
+- **Songs:** Retrieves public songs, excludes hidden entries, sorts by rank, and displays up to ten tracks.
+- **Posts:** Retrieves published articles for the home and news screens.
+- **Sports posts:** Retrieves published stories categorised as Sport.
+- **Shows:** Retrieves station programme information for the home screen's on-air panel.
 
-Relative image paths returned by the API are resolved against the API base URL; absolute HTTP(S) image URLs are used as provided. The API must be reachable from the device or browser running the app. If the backend URL changes, update the `API_URL` constants in `src/app/index.tsx`, `src/app/news.tsx`, and `src/app/sports.tsx`.
+The app supports API responses returned either as JSON arrays or as objects containing the relevant `songs`, `posts`, or `shows` array.
+
+Images can be supplied as absolute HTTP(S) URLs or relative paths resolved against the API's base URL.
+
+The currently configured API endpoint is hosted on Microsoft Azure:
+
+`https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net`
+
+The application requires a reachable backend to retrieve live content.
+
+## User Experience and Reliability
+
+The app includes basic safeguards to make browsing more reliable:
+
+- Loading and content-fetching states for API-driven screens.
+- Pull-to-refresh support on content screens.
+- Retry actions when requests fail.
+- Shared bottom navigation for a consistent interface.
+- Responsive platform support through Expo and React Native.
+
+These features help the app handle temporary connectivity issues while keeping its content accessible whenever the API is available.
 
 ## Project Structure
 
 ```text
 .
-├── app.json                 # Expo app identity, platform and plugin configuration
-├── assets/                  # App icons and image assets
-├── src/
-│   ├── app/
-│   │   ├── _layout.tsx      # Expo Router root stack
-│   │   ├── index.tsx        # Home screen
-│   │   ├── news.tsx         # News screen
-│   │   └── sports.tsx       # Sport screen
-│   └── components/
-│       └── bottom-nav.tsx   # Shared bottom navigation
-├── package.json             # Dependencies and npm scripts
-└── tsconfig.json            # Strict TypeScript configuration
+├── app.json
+├── assets/
+└── src/
+    ├── app/
+    │   ├── _layout.tsx
+    │   ├── index.tsx
+    │   ├── news.tsx
+    │   └── sports.tsx
+    └── components/
+        └── bottom-nav.tsx
 ```
 
-## Current Limitations
+- `src/app/index.tsx` — Home screen and featured content.
+- `src/app/news.tsx` — News feed and category filtering.
+- `src/app/sports.tsx` — Sports feed and sport-specific filtering.
+- `src/app/_layout.tsx` — Root navigation layout.
+- `src/components/bottom-nav.tsx` — Shared bottom navigation.
+- `assets/` — Application icons and visual assets.
+- `app.json` — Expo application configuration.
 
-- The Home screen's **Listen Now** control is visual only; audio playback is not implemented.
-- The **Get in Touch** control is also visual only and does not currently open a contact action.
-- Music, Shows, and More are shown in the bottom navigation, but their destination screens have not been added yet.
-- The API base URL is duplicated in the screen files rather than configured through an environment variable.
+## Roadmap 🚀
 
-## Expo Configuration
+Planned improvements include:
 
-The application uses Expo Router as its entry point (`expo-router/entry`), enables typed routes and the React Compiler, and configures a static web output. When changing Expo or React Native dependencies, use the versioned [Expo SDK 57 docs](https://docs.expo.dev/versions/v57.0.0/) and Expo's compatible dependency tooling to keep package versions aligned.
+- **Live Radio Streaming:** Enable listeners to tune in directly through the app.
+- **Music Screen:** Provide a dedicated space to explore station music and featured tracks.
+- **Shows & Schedule:** Browse programmes, presenters, and broadcast times.
+- **Article Details:** Add dedicated views for reading full news and sports stories.
+- **Contact & Engagement:** Enable listeners to contact the station directly.
+- **Improved Navigation:** Complete the Music, Shows, and More destinations.
+- **Configuration Improvements:** Centralise API configuration through environment variables.
+- **Enhanced Discovery:** Explore richer content browsing and improved filtering.
 
+These improvements aim to develop OpenMicFM Mobile into a more complete digital companion to the station.
+
+## Development
+
+To run the application locally, install the project's locked dependencies and start the Expo development server:
+
+```bash
+npm ci
+npm start
+```
+
+Additional scripts are available for running the supported platforms and performing code-quality checks:
+
+```bash
+npm run ios
+npm run android
+npm run web
+npm run lint
+```
+
+## About OpenMicFM
+
+OpenMicFM is a community radio initiative based in **Gqeberha, Eastern Cape, South Africa**. OpenMicFM Mobile supports the station's digital presence by bringing together music discovery, community news, sports coverage, and programme information in one cross-platform application.
+
+**OpenMicFM Mobile — Connecting the community, one story and one song at a time.**
