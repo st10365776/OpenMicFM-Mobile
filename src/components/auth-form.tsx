@@ -15,7 +15,6 @@ import { useRouter } from 'expo-router';
 
 /* =========================================================
    API
-========================================================= */
 
 const API_URL =
   'https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net';
@@ -101,7 +100,6 @@ export default function AuthForm({ mode }: AuthProps) {
    
 /* =====================================================
    CONNECTING LOGIN AND REGISTRATION TO API
-===================================================== */
 
 try {
   const endpoint = isRegister
