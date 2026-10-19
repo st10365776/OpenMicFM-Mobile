@@ -14,6 +14,7 @@ import {
 import { Stack, useRouter } from 'expo-router';
 
 import BottomNav from '../components/bottom-nav';
+import { useThemedStyles } from '../context/app-context';
 
 const API_URL =
   'https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net';
@@ -36,6 +37,7 @@ function resolveImageUrl(image?: string): string | null {
 
 export default function MusicScreen() {
   const router = useRouter();
+  const styles = useThemedStyles(baseStyles);
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -185,7 +187,7 @@ const WHITE = '#FFFFFF';
 const GREY = '#929292';
 const BORDER = '#292929';
 
-const styles = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: BLACK },
   scroll: { flex: 1 },
   content: { paddingTop: 55, paddingHorizontal: 18 },
@@ -257,3 +259,5 @@ const styles = StyleSheet.create({
   chartNote: { color: GREY, fontSize: 9, lineHeight: 14, marginTop: 12 },
   bottomSpace: { height: 95 },
 });
+
+const styles = baseStyles;

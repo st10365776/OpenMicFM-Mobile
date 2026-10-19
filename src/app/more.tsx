@@ -1,13 +1,13 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-    Alert,
-    Pressable,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    View,
+	Alert,
+	Pressable,
+	ScrollView,
+	StatusBar,
+	StyleSheet,
+	Text,
+	View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppContext } from '../context/app-context';
@@ -127,7 +127,7 @@ export default function MoreScreen() {
 										<Text
 											style={[
 												styles.modeButtonText,
-												{ color: selected ? '#000000' : colors.muted },
+												{ color: selected ? colors.black : colors.muted },
 											]}
 										>
 											{mode === 'light' ? 'Light' : 'Dark'}
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
 		marginBottom: 12,
 	},
 	privacyAction: {
-		color: '#8EBE40',
+		color: '#D71920',
 		fontSize: 11,
 		fontWeight: '800',
 		letterSpacing: 0.8,
