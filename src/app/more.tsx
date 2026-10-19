@@ -30,9 +30,10 @@ export default function MoreScreen() {
 
 	const showAudioQualityOptions = () => {
 		Alert.alert('Audio quality', 'Choose your preferred playback quality.', [
-			{ text: 'Low', onPress: () => setAudioQuality('Low') },
-			{ text: 'Standard', onPress: () => setAudioQuality('Standard') },
-			{ text: 'High', onPress: () => setAudioQuality('High') },
+			...audioQualities.map((quality) => ({
+				text: quality,
+				onPress: () => setAudioQuality(quality),
+			})),
 			{ text: 'Cancel', style: 'cancel' },
 		]);
 	};
