@@ -19,7 +19,6 @@ import {
 import { useRouter } from 'expo-router';
 
 import BottomNav from '../components/bottom-nav';
-import { useThemedStyles } from '../context/app-context';
 
 /* =========================================================
    API
@@ -71,7 +70,6 @@ type Category =
 
 export default function NewsScreen() {
   const router = useRouter();
-  const styles = useThemedStyles(baseStyles);
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [category, setCategory] =
@@ -150,7 +148,7 @@ export default function NewsScreen() {
 
   const openStory = (post: Post) => {
     router.push({
-      pathname: '/story' as never,
+      pathname: '/story',
       params: { id: String(post.id) },
     });
   };
@@ -502,8 +500,6 @@ function CategoryButton({
   active: boolean;
   onPress: () => void;
 }) {
-  const styles = useThemedStyles(baseStyles);
-
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -538,8 +534,6 @@ function FeaturedNewsCard({
   imageUrl: string | null;
   onPress: () => void;
 }) {
-  const styles = useThemedStyles(baseStyles);
-
   return (
     <TouchableOpacity
       style={styles.featuredCard}
@@ -601,8 +595,6 @@ function NewsRow({
   imageUrl: string | null;
   onPress: () => void;
 }) {
-  const styles = useThemedStyles(baseStyles);
-
   return (
     <TouchableOpacity
       style={styles.newsRow}
@@ -659,8 +651,6 @@ function SectionHeader({
   number: string;
   title: string;
 }) {
-  const styles = useThemedStyles(baseStyles);
-
   return (
     <View style={styles.sectionHeader}>
       <View style={styles.sectionLeft}>
@@ -687,8 +677,6 @@ function EmptyState({
 }: {
   text: string;
 }) {
-  const styles = useThemedStyles(baseStyles);
-
   return (
     <View style={styles.emptyBox}>
       <Text style={styles.emptyText}>
@@ -702,7 +690,7 @@ function EmptyState({
    STYLES
 ========================================================= */
 
-const baseStyles = StyleSheet.create({
+const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: BLACK,
@@ -1228,5 +1216,3 @@ const baseStyles = StyleSheet.create({
     marginTop: 6,
   },
 });
-
-const styles = baseStyles;

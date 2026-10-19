@@ -13,7 +13,6 @@ import {
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 
 import BottomNav from '../../components/bottom-nav';
-import { useThemedStyles } from '../../context/app-context';
 
 const API_URL =
   'https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net';
@@ -44,7 +43,6 @@ function formatTime(value?: string): string {
 
 export default function ShowDetailScreen() {
   const router = useRouter();
-  const styles = useThemedStyles(baseStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const [show, setShow] = useState<Show | null>(null);
   const [loading, setLoading] = useState(true);
@@ -103,7 +101,7 @@ export default function ShowDetailScreen() {
           <TouchableOpacity
             accessibilityRole="button"
             accessibilityLabel="Back to shows"
-            onPress={() => (router.canGoBack() ? router.back() : router.replace('/shows' as never))}
+            onPress={() => (router.canGoBack() ? router.back() : router.replace('/shows'))}
             style={styles.backButton}
           >
             <Text style={styles.backText}>‹</Text>
@@ -123,7 +121,7 @@ export default function ShowDetailScreen() {
           <View style={styles.stateBox}>
             <Text style={styles.errorTitle}>SHOW UNAVAILABLE</Text>
             <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity onPress={() => router.replace('/shows' as never)} style={styles.retryButton}>
+            <TouchableOpacity onPress={() => router.replace('/shows')} style={styles.retryButton}>
               <Text style={styles.retryText}>VIEW ALL SHOWS</Text>
             </TouchableOpacity>
           </View>
@@ -156,7 +154,7 @@ export default function ShowDetailScreen() {
             <TouchableOpacity
               style={styles.allShowsButton}
               activeOpacity={0.8}
-              onPress={() => router.push('/shows' as never)}
+              onPress={() => router.push('/shows')}
             >
               <Text style={styles.allShowsText}>EXPLORE ALL SHOWS  →</Text>
             </TouchableOpacity>
@@ -178,7 +176,7 @@ const WHITE = '#FFFFFF';
 const GREY = '#929292';
 const BORDER = '#292929';
 
-const baseStyles = StyleSheet.create({
+const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: BLACK },
   scroll: { flex: 1 },
   content: { paddingTop: 55, paddingHorizontal: 18 },
@@ -210,5 +208,3 @@ const baseStyles = StyleSheet.create({
   retryText: { color: WHITE, fontSize: 10, fontWeight: '900' },
   bottomSpace: { height: 95 },
 });
-
-const styles = baseStyles;

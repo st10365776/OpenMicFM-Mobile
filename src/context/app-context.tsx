@@ -20,8 +20,6 @@ export type AppColors = {
 	red: string;
 	redDark: string;
 	yellow: string;
-	black: string;
-	white: string;
 };
 
 export type ListenerProfile = {
@@ -51,8 +49,6 @@ const darkColors: AppColors = {
 	red: '#D71920',
 	redDark: '#A80F15',
 	yellow: '#FFD200',
-	black: '#000000',
-	white: '#FFFFFF',
 };
 
 const lightColors: AppColors = {
@@ -66,8 +62,6 @@ const lightColors: AppColors = {
 	red: '#D71920',
 	redDark: '#A80F15',
 	yellow: '#FFD200',
-	black: '#000000',
-	white: '#FFFFFF',
 };
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -126,29 +120,20 @@ export function useThemedStyles<T extends StyleSheet.NamedStyles<T>>(baseStyles:
 				const normalized = value.toUpperCase();
 
 				if (property === 'color') {
-					if (normalized === '#D71920') {
-						themed[property] = colors.red;
-					} else if (normalized === '#A80F15') {
-						themed[property] = colors.redDark;
-					} else if (normalized === '#FFD200') {
-						themed[property] = colors.yellow;
-					} else if (normalized === '#FFFFFF') {
+					if (normalized === '#FFFFFF') {
 						themed[property] =
-							/(buttonText|retryText|submitText|logoText|avatarText|loadingLogoText|placeholderText|placeholderMark|badgeText|countText|chipTextActive|categoryTextActive|newsBadgeText|allButtonText|allShowsText|readStory)/i.test(
+							/(buttonText|retryText|submitText|logoText|loadingLogoText|placeholderText|placeholderMark|badgeText|countText|chipTextActive|categoryTextActive|newsBadgeText|allButtonText|allShowsText|readStory)/i.test(
 								name
 							)
-								? colors.white
+								? '#FFFFFF'
 								: colors.text;
-					} else if (normalized === '#929292' || normalized === '#626262') {
-						themed[property] = colors.muted;
-					} else if (
-						normalized === '#555555' ||
-						normalized === '#666666' ||
-						normalized === '#777777'
-					) {
+					}
+					else if (normalized === '#929292') themed[property] = colors.muted;
+					else if (normalized === '#000000') {
+						themed[property] = themeMode === 'dark' ? '#000000' : '#111111';
+					}
+					else if (normalized === '#555555' || normalized === '#666666') {
 						themed[property] = colors.subtle;
-					} else if (normalized === '#000000' || normalized === '#111111') {
-						themed[property] = themeMode === 'dark' ? colors.black : colors.text;
 					}
 				} else if (property.startsWith('backgroundColor')) {
 					if (normalized === '#000000' || normalized === '#0D0D0D') {
@@ -157,24 +142,12 @@ export function useThemedStyles<T extends StyleSheet.NamedStyles<T>>(baseStyles:
 						themed[property] = colors.surface;
 					} else if (normalized === '#1E1E1E') {
 						themed[property] = colors.surfaceAlt;
-					} else if (normalized === '#FFFFFF') {
-						themed[property] = themeMode === 'dark' ? colors.white : colors.surface;
-					} else if (normalized === '#F4F4F4') {
-						themed[property] = colors.surface;
-					} else if (normalized === '#E9E9E9') {
-						themed[property] = colors.surfaceAlt;
-					} else if (normalized === '#241010') {
-						themed[property] =
-							themeMode === 'dark' ? normalized : colors.surfaceAlt;
-					} else if (normalized === '#D71920' || normalized === '#A80F15') {
-						themed[property] =
-							normalized === '#A80F15' ? colors.redDark : colors.red;
-					} else if (normalized === '#FFD200') {
-						themed[property] = colors.yellow;
+					} else if (normalized === '#241010' && themeMode === 'light') {
+						themed[property] = '#FCE8E8';
 					}
 				} else if (
 					property.toLowerCase().includes('border') &&
-					(normalized === '#292929' || normalized === '#D6D6D6')
+					normalized === '#292929'
 				) {
 					themed[property] = colors.border;
 				}

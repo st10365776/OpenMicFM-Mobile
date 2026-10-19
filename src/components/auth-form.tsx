@@ -21,6 +21,11 @@ import {
 const API_URL =
   'https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net';
 
+/* =========================================================
+   OPENMIC FM - LOGIN AND REGISTRATION
+   FRONTEND DESIGN
+========================================================= */
+
 const RED = '#D71920';
 const WHITE = '#FFFFFF';
 const BLACK = '#000000';
@@ -140,7 +145,7 @@ export default function AuthForm({ mode }: AuthProps) {
         Alert.alert(
           'Registration successful',
           'Your account has been created. You can now log in.',
-          [{ text: 'Go to Login', onPress: () => router.replace('/' as never) }]
+          [{ text: 'Go to Login', onPress: () => router.replace('/login') }]
         );
         return;
       }
@@ -171,18 +176,6 @@ export default function AuthForm({ mode }: AuthProps) {
     } finally {
       setSubmitting(false);
     }
-    Alert.alert(
-      isRegister ? 'Registration ready' : 'Login ready',
-      isRegister
-        ? 'Your account details look good. Connect the backend later to complete signup.'
-        : 'Your credentials look good. Connect the backend later to complete login.',
-      [
-        {
-          text: 'Continue',
-          onPress: () => router.replace(isRegister ? '/login' : '/'),
-        },
-      ]
-    );
   };
 
   /* =======================================================
@@ -333,14 +326,14 @@ export default function AuthForm({ mode }: AuthProps) {
           </Text>
 
           <TouchableOpacity
-            onPress={() => {
-              if (isRegister) {
-                router.push('/login' as never);
-              } else {
-                router.push('/register' as never);
-              }
-            }}
-          >
+  onPress={() => {
+    if (isRegister) {
+      router.push('/login');
+    } else {
+      router.push('/register');
+    }
+  }}
+>
             <Text style={styles.switchLink}>
               {isRegister ? 'Log In' : 'Register'}
             </Text>
@@ -479,7 +472,7 @@ const baseStyles = StyleSheet.create({
   },
 
   errorText: {
-    color: '#D71920',
+    color: '#FF5555',
     fontSize: 12,
     marginTop: 15,
     lineHeight: 19,

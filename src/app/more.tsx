@@ -1,13 +1,13 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-	Alert,
-	Pressable,
-	ScrollView,
-	StatusBar,
-	StyleSheet,
-	Text,
-	View,
+    Alert,
+    Pressable,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppContext } from '../context/app-context';
@@ -30,10 +30,9 @@ export default function MoreScreen() {
 
 	const showAudioQualityOptions = () => {
 		Alert.alert('Audio quality', 'Choose your preferred playback quality.', [
-			...audioQualities.map((quality) => ({
-				text: quality,
-				onPress: () => setAudioQuality(quality),
-			})),
+			{ text: 'Low', onPress: () => setAudioQuality('Low') },
+			{ text: 'Standard', onPress: () => setAudioQuality('Standard') },
+			{ text: 'High', onPress: () => setAudioQuality('High') },
 			{ text: 'Cancel', style: 'cancel' },
 		]);
 	};
@@ -128,7 +127,7 @@ export default function MoreScreen() {
 										<Text
 											style={[
 												styles.modeButtonText,
-												{ color: selected ? colors.black : colors.muted },
+												{ color: selected ? '#000000' : colors.muted },
 											]}
 										>
 											{mode === 'light' ? 'Light' : 'Dark'}
@@ -456,7 +455,7 @@ const styles = StyleSheet.create({
 		marginBottom: 12,
 	},
 	privacyAction: {
-		color: '#D71920',
+		color: '#8EBE40',
 		fontSize: 11,
 		fontWeight: '800',
 		letterSpacing: 0.8,

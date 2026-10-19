@@ -14,7 +14,6 @@ import {
 import { Stack, useRouter } from 'expo-router';
 
 import BottomNav from '../components/bottom-nav';
-import { useThemedStyles } from '../context/app-context';
 
 /* =========================================================
    API  
@@ -100,7 +99,6 @@ function formatDate(value?: string): string {
 
 export default function SportsScreen() {
   const router = useRouter();
-  const styles = useThemedStyles(baseStyles);
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [sport, setSport] = useState<SportFilter>('ALL');
@@ -171,7 +169,7 @@ export default function SportsScreen() {
   // Opens the in-app story screen .
   const openStory = (post: Post) => {
     router.push({
-      pathname: '/story' as never,
+      pathname: '/story',
       params: { id: String(post.id) },
     });
   };
@@ -378,8 +376,6 @@ function Chip({
   active: boolean;
   onPress: () => void;
 }) {
-  const styles = useThemedStyles(baseStyles);
-
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -400,7 +396,6 @@ function FeaturedCard({
   post: Post;
   onPress: () => void;
 }) {
-  const styles = useThemedStyles(baseStyles);
   const uri = imageUrl(post.image);
   const date = formatDate(post.published_at || post.created_at);
 
@@ -450,7 +445,6 @@ function StoryRow({
   post: Post;
   onPress: () => void;
 }) {
-  const styles = useThemedStyles(baseStyles);
   const uri = imageUrl(post.image);
   const date = formatDate(post.published_at || post.created_at);
 
@@ -488,8 +482,6 @@ function StoryRow({
 }
 
 function SectionHeader({ number, title }: { number: string; title: string }) {
-  const styles = useThemedStyles(baseStyles);
-
   return (
     <View style={styles.sectionHeader}>
       <View style={styles.sectionLeft}>
@@ -506,7 +498,7 @@ function SectionHeader({ number, title }: { number: string; title: string }) {
    STYLES
 ========================================================= */
 
-const baseStyles = StyleSheet.create({
+const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: BLACK },
   scroll: { flex: 1, backgroundColor: BLACK },
   content: { paddingTop: 55, paddingHorizontal: 18 },
@@ -833,5 +825,3 @@ const baseStyles = StyleSheet.create({
   },
   loadingSubtext: { color: GREY, fontSize: 10, marginTop: 6 },
 });
-
-const styles = baseStyles;
