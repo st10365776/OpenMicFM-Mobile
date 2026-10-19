@@ -22,14 +22,9 @@ const API_URL =
   'https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net';
 
 /* =========================================================
-   API
-
-const API_URL =
-  'https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net';
-
-/* =========================================================
    OPENMIC FM - LOGIN AND REGISTRATION
    FRONTEND DESIGN
+========================================================= */
 
 const RED = '#D71920';
 const WHITE = '#FFFFFF';
@@ -181,18 +176,6 @@ export default function AuthForm({ mode }: AuthProps) {
     } finally {
       setSubmitting(false);
     }
-    Alert.alert(
-      isRegister ? 'Registration ready' : 'Login ready',
-      isRegister
-        ? 'Your account details look good. Connect the backend later to complete signup.'
-        : 'Your credentials look good. Connect the backend later to complete login.',
-      [
-        {
-          text: 'Continue',
-          onPress: () => router.replace(isRegister ? '/login' : '/'),
-        },
-      ]
-    );
   };
 
   /* =======================================================

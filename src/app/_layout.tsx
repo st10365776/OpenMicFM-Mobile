@@ -1,13 +1,3 @@
-import { Stack } from "expo-router";
-import { AppProvider } from "../context/app-context";
-
-export default function RootLayout() {
-  return (
-    <AppProvider>
-      <Stack />
-    </AppProvider>
-  );
-
 import {
   Stack,
   usePathname,
@@ -15,6 +5,7 @@ import {
   useRouter,
 } from 'expo-router';
 import { useEffect, useRef } from 'react';
+import { AppProvider } from '../context/app-context';
 
 export default function RootLayout() {
   const router = useRouter();
@@ -33,5 +24,9 @@ export default function RootLayout() {
     }
   }, [navigationState?.key, pathname, router]);
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <AppProvider>
+      <Stack screenOptions={{ headerShown: false }} />
+    </AppProvider>
+  );
 }
