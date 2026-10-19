@@ -1,10 +1,11 @@
 import { Stack } from "expo-router";
-import { AppProvider } from "../context/app-context";
+import { StatusBar } from "react-native";
+import { AppProvider, useAppContext } from "../context/app-context";
 
 export default function RootLayout() {
   return (
     <AppProvider>
-      <Stack />
+      <ThemedNavigation />
     </AppProvider>
   );
 
@@ -34,4 +35,20 @@ export default function RootLayout() {
   }, [navigationState?.key, pathname, router]);
 
   return <Stack screenOptions={{ headerShown: false }} />;
+}
+
+function ThemedNavigation() {
+  const { colors, themeMode } = useAppContext();
+
+  return (
+    <>
+      <StatusBar
+        barStyle={themeMode === "dark" ? "light-content" : "dark-content"}
+        backgroundColor={colors.background}
+      />
+      <Stack>
+        <Stack.Screen name="profile" options={{ headerShown: false }} />
+      </Stack>
+    </>
+  );
 }

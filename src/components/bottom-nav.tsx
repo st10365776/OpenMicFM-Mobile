@@ -7,15 +7,12 @@ import {
 } from 'react-native';
 import { useAppContext } from '../context/app-context';
 
-const RED = '#D71920';
-const WHITE = '#FFFFFF';
-const GREY = '#929292';
-const BORDER = '#292929';
+type AppRoute = '/' | '/news' | '/music' | '/shows' | '/more';
 
 type NavItem = {
   icon: string;
   label: string;
-  route: string;
+  route: AppRoute;
 };
 
 export default function BottomNav() {
@@ -51,9 +48,11 @@ export default function BottomNav() {
     },
   ];
 
-  const handleNavigation = (route: string) => {
-    router.push(route as any);
+  const handleNavigation = (route: AppRoute) => {
+    router.push(route);
   };
+
+  const isProfileRoute = pathname === '/profile';
 
   return (
     <View
@@ -66,9 +65,10 @@ export default function BottomNav() {
         const isActive =
           item.route === '/'
             ? pathname === '/'
-            : pathname.startsWith(item.route) ||
-              (item.route === '/shows' && pathname.startsWith('/show/')) ||
-              (item.route === '/more' && pathname === '/profile');
+            : item.route === '/more'
+              ? pathname.startsWith('/more') || isProfileRoute
+              : pathname.startsWith(item.route) ||
+                (item.route === '/shows' && pathname.startsWith('/show/'));
 
         return (
           <TouchableOpacity
@@ -80,7 +80,6 @@ export default function BottomNav() {
             <Text
               style={[
                 styles.icon,
-                isActive && styles.activeIcon,
                 { color: isActive ? colors.red : colors.muted },
               ]}
             >
@@ -90,7 +89,6 @@ export default function BottomNav() {
             <Text
               style={[
                 styles.label,
-                isActive && styles.activeLabel,
                 { color: isActive ? colors.text : colors.muted },
               ]}
             >
@@ -98,7 +96,7 @@ export default function BottomNav() {
             </Text>
 
             {isActive && (
-              <View style={styles.activeLine} />
+              <View style={[styles.activeLine, { backgroundColor: colors.red }]} />
             )}
           </TouchableOpacity>
         );
@@ -116,10 +114,7 @@ const styles = StyleSheet.create({
 
     height: 72,
 
-    backgroundColor: '#000000',
-
     borderTopWidth: 1,
-    borderTopColor: BORDER,
 
     flexDirection: 'row',
     alignItems: 'center',
@@ -143,29 +138,17 @@ const styles = StyleSheet.create({
   },
 
   icon: {
-    color: GREY,
-
     fontSize: 21,
 
     marginBottom: 4,
   },
 
-  activeIcon: {
-    color: RED,
-  },
-
   label: {
-    color: GREY,
-
     fontSize: 7,
 
     fontWeight: '900',
 
     letterSpacing: 0.8,
-  },
-
-  activeLabel: {
-    color: WHITE,
   },
 
   activeLine: {
@@ -175,8 +158,6 @@ const styles = StyleSheet.create({
 
     width: 25,
     height: 3,
-
-    backgroundColor: RED,
 
     borderTopLeftRadius: 3,
     borderTopRightRadius: 3,

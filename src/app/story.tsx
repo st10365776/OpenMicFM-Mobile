@@ -15,6 +15,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import RenderHTML from 'react-native-render-html';
 
 import BottomNav from '../components/bottom-nav';
+import { useThemedStyles } from '../context/app-context';
 
 const API_URL =
   'https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net';
@@ -49,6 +50,7 @@ function formatDate(value?: string): string {
 
 export default function StoryScreen() {
   const router = useRouter();
+  const styles = useThemedStyles(baseStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const { width } = useWindowDimensions();
   const [post, setPost] = useState<Post | null>(null);
@@ -170,7 +172,7 @@ const articleTagStyles = {
   blockquote: { borderLeftColor: RED, borderLeftWidth: 3, paddingLeft: 14 },
 };
 
-const styles = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: BLACK },
   scroll: { flex: 1 },
   content: { paddingTop: 55, paddingHorizontal: 18 },
@@ -207,3 +209,5 @@ const styles = StyleSheet.create({
   errorText: { color: GREY, fontSize: 12, textAlign: 'center', marginTop: 8 },
   bottomSpace: { height: 95 },
 });
+
+const styles = baseStyles;

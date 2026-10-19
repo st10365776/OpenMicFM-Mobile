@@ -14,6 +14,7 @@ import {
 import { useRouter } from 'expo-router';
 
 import BottomNav from '../components/bottom-nav';
+import { useThemedStyles } from '../context/app-context';
 
 /* =========================================================
    API
@@ -80,6 +81,7 @@ type Show = {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const styles = useThemedStyles(baseStyles);
 
   const [songs, setSongs] = useState<Song[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -212,7 +214,7 @@ export default function HomeScreen() {
 
   const openStory = (post: Post) => {
     router.push({
-      pathname: '/story',
+      pathname: '/story' as never,
       params: { id: String(post.id) },
     });
   };
@@ -289,7 +291,36 @@ export default function HomeScreen() {
         </View>
 
 
-      
+        {/* =================================================
+            ADDED: LOGIN AND REGISTER BUTTONS
+            These open the separate mobile authentication pages.
+            They do not change the Home page API or existing content.
+        ================================================= */}
+
+        <View style={styles.authActions}>
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={() => router.push('/login' as never)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.loginButtonText}>
+              LOG IN
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.registerButton}
+            onPress={() => router.push('/register' as never)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.registerButtonText}>
+              CREATE ACCOUNT
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* END OF ADDED LOGIN AND REGISTER BUTTONS */}
+
 
         {/* =================================================
             ERROR
@@ -393,7 +424,7 @@ export default function HomeScreen() {
           number="01"
           title="TRENDING SONGS IN SA"
           action="MUSIC"
-          onPress={() => router.push('/music')}
+          onPress={() => router.push('/music' as never)}
         />
 
         <View style={styles.songsCard}>
@@ -479,11 +510,11 @@ export default function HomeScreen() {
           onPress={() => {
             if (currentShow) {
               router.push({
-                pathname: '/show/[id]',
+                pathname: '/show/[id]' as never,
                 params: { id: String(currentShow.id) },
               });
             } else {
-              router.push('/shows');
+              router.push('/shows' as never);
             }
           }}
         >
@@ -627,6 +658,8 @@ function SectionHeader({
   action?: string;
   onPress?: () => void;
 }) {
+  const styles = useThemedStyles(baseStyles);
+
   return (
     <View style={styles.sectionHeader}>
       <View style={styles.sectionHeaderLeft}>
@@ -666,6 +699,8 @@ function SongRow({
   index: number;
   imageUrl: string | null;
 }) {
+  const styles = useThemedStyles(baseStyles);
+
   return (
     <View style={styles.songRow}>
       <Text style={styles.songRank}>
@@ -721,6 +756,8 @@ function StoryCard({
   featured?: boolean;
   onPress: () => void;
 }) {
+  const styles = useThemedStyles(baseStyles);
+
   return (
     <TouchableOpacity
       style={[
@@ -789,6 +826,8 @@ function EmptyState({
 }: {
   text: string;
 }) {
+  const styles = useThemedStyles(baseStyles);
+
   return (
     <View style={styles.emptyBox}>
       <Text style={styles.emptyText}>
@@ -802,7 +841,7 @@ function EmptyState({
    STYLES
 ========================================================= */
 
-const styles = StyleSheet.create({
+const baseStyles = StyleSheet.create({
 
 
   
@@ -1483,5 +1522,6 @@ registerButtonText: {
     marginTop: 7,
   },
 
-
 });
+
+const styles = baseStyles;

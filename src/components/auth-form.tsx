@@ -150,7 +150,7 @@ export default function AuthForm({ mode }: AuthProps) {
         Alert.alert(
           'Registration successful',
           'Your account has been created. You can now log in.',
-          [{ text: 'Go to Login', onPress: () => router.replace('/login') }]
+          [{ text: 'Go to Login', onPress: () => router.replace('/' as never) }]
         );
         return;
       }
@@ -343,14 +343,14 @@ export default function AuthForm({ mode }: AuthProps) {
           </Text>
 
           <TouchableOpacity
-  onPress={() => {
-    if (isRegister) {
-      router.push('/login');
-    } else {
-      router.push('/register');
-    }
-  }}
->
+            onPress={() => {
+              if (isRegister) {
+                router.push('/login' as never);
+              } else {
+                router.push('/register' as never);
+              }
+            }}
+          >
             <Text style={styles.switchLink}>
               {isRegister ? 'Log In' : 'Register'}
             </Text>
@@ -489,7 +489,7 @@ const baseStyles = StyleSheet.create({
   },
 
   errorText: {
-    color: '#FF5555',
+    color: '#D71920',
     fontSize: 12,
     marginTop: 15,
     lineHeight: 19,
