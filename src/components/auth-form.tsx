@@ -21,16 +21,6 @@ import {
 const API_URL =
   'https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net';
 
-/* =========================================================
-   API
-
-const API_URL =
-  'https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net';
-
-/* =========================================================
-   OPENMIC FM - LOGIN AND REGISTRATION
-   FRONTEND DESIGN
-
 const RED = '#D71920';
 const WHITE = '#FFFFFF';
 const BLACK = '#000000';
