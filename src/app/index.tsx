@@ -579,10 +579,11 @@ export default function HomeScreen() {
 
           <TouchableOpacity
             style={styles.advertiseButton}
-          >
-            <Text style={styles.advertiseButtonText}>
-              GET IN TOUCH
-            </Text>
+            onPress={() => router.push('/contact' as never)}
+           >
+          <Text style={styles.advertiseButtonText}>
+           GET IN TOUCH
+        </Text>
           </TouchableOpacity>
         </View>
 
