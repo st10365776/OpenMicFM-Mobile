@@ -14,6 +14,7 @@ import {
 import { useRouter } from 'expo-router';
 
 import BottomNav from '../components/bottom-nav';
+import { useThemedStyles } from '../context/app-context';
 
 /* =========================================================
    API
@@ -80,6 +81,7 @@ type Show = {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const styles = useThemedStyles(baseStyles);
 
   const [songs, setSongs] = useState<Song[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -627,6 +629,8 @@ function SectionHeader({
   action?: string;
   onPress?: () => void;
 }) {
+  const styles = useThemedStyles(baseStyles);
+
   return (
     <View style={styles.sectionHeader}>
       <View style={styles.sectionHeaderLeft}>
@@ -666,6 +670,8 @@ function SongRow({
   index: number;
   imageUrl: string | null;
 }) {
+  const styles = useThemedStyles(baseStyles);
+
   return (
     <View style={styles.songRow}>
       <Text style={styles.songRank}>
@@ -721,6 +727,8 @@ function StoryCard({
   featured?: boolean;
   onPress: () => void;
 }) {
+  const styles = useThemedStyles(baseStyles);
+
   return (
     <TouchableOpacity
       style={[
@@ -789,6 +797,8 @@ function EmptyState({
 }: {
   text: string;
 }) {
+  const styles = useThemedStyles(baseStyles);
+
   return (
     <View style={styles.emptyBox}>
       <Text style={styles.emptyText}>
@@ -802,55 +812,7 @@ function EmptyState({
    STYLES
 ========================================================= */
 
-const styles = StyleSheet.create({
-
-
-  
-/* =========================================================
-   ADDED: LOGIN AND REGISTER BUTTON STYLES
-========================================================= */
-
-authActions: {
-  flexDirection: 'row',
-  gap: 10,
-  marginBottom: 22,
-},
-
-loginButton: {
-  flex: 1,
-  borderWidth: 1,
-  borderColor: RED,
-  borderRadius: 8,
-  paddingVertical: 13,
-  alignItems: 'center',
-  justifyContent: 'center',
-},
-
-loginButtonText: {
-  color: WHITE,
-  fontSize: 12,
-  fontWeight: '900',
-  letterSpacing: 1,
-},
-
-registerButton: {
-  flex: 1,
-  backgroundColor: RED,
-  borderRadius: 8,
-  paddingVertical: 13,
-  alignItems: 'center',
-  justifyContent: 'center',
-},
-
-registerButtonText: {
-  color: WHITE,
-  fontSize: 12,
-  fontWeight: '900',
-  letterSpacing: 0.5,
-},
-
-/* END OF ADDED LOGIN AND REGISTER STYLES */
-
+const baseStyles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: BLACK,

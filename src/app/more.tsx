@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
 		marginBottom: 12,
 	},
 	privacyAction: {
-		color: '#8EBE40',
+		color: '#D71920',
 		fontSize: 11,
 		fontWeight: '800',
 		letterSpacing: 0.8,

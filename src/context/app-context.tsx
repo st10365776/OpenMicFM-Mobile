@@ -121,12 +121,16 @@ export function useThemedStyles<T extends StyleSheet.NamedStyles<T>>(baseStyles:
 
 				if (property === 'color') {
 					if (normalized === '#FFFFFF') {
-						themed[property] =
-							/(buttonText|retryText|submitText|logoText|loadingLogoText|placeholderText|placeholderMark|badgeText|countText|chipTextActive|categoryTextActive|newsBadgeText|allButtonText|allShowsText|readStory)/i.test(
-								name
-							)
-								? '#FFFFFF'
-								: colors.text;
+						if (/allShowsText/i.test(name)) {
+							themed[property] = themeMode === 'dark' ? '#FFFFFF' : colors.red;
+						} else {
+							themed[property] =
+								/(buttonText|retryText|submitText|logoText|loadingLogoText|placeholderText|placeholderMark|badgeText|countText|chipTextActive|categoryTextActive|newsBadgeText|allButtonText|readStory|onAirLiveText|onAirTime|onAirTitle|onAirPresenter|chartTitle|chartMark)/i.test(
+									name
+								)
+									? '#FFFFFF'
+									: colors.text;
+						}
 					}
 					else if (normalized === '#929292') themed[property] = colors.muted;
 					else if (normalized === '#000000') {

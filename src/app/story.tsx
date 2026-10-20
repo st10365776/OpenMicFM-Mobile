@@ -15,6 +15,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import RenderHTML from 'react-native-render-html';
 
 import BottomNav from '../components/bottom-nav';
+import { useAppContext, useThemedStyles } from '../context/app-context';
 
 const API_URL =
   'https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net';
@@ -49,6 +50,8 @@ function formatDate(value?: string): string {
 
 export default function StoryScreen() {
   const router = useRouter();
+  const styles = useThemedStyles(baseStyles);
+  const { colors } = useAppContext();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { width } = useWindowDimensions();
   const [post, setPost] = useState<Post | null>(null);
@@ -139,7 +142,18 @@ export default function StoryScreen() {
                 contentWidth={width - 36}
                 source={{ html: post.body }}
                 baseStyle={styles.articleBody}
-                tagsStyles={articleTagStyles}
+                tagsStyles={{
+                  p: { marginTop: 0, marginBottom: 18 },
+                  h1: { color: colors.text, fontSize: 25, fontWeight: '900' },
+                  h2: { color: colors.text, fontSize: 21, fontWeight: '900' },
+                  h3: { color: colors.text, fontSize: 18, fontWeight: '800' },
+                  a: { color: colors.yellow },
+                  blockquote: {
+                    borderLeftColor: colors.red,
+                    borderLeftWidth: 3,
+                    paddingLeft: 14,
+                  },
+                }}
               />
             ) : (
               <Text style={styles.articleBody}>The full story is not available.</Text>
@@ -161,16 +175,7 @@ const WHITE = '#FFFFFF';
 const GREY = '#929292';
 const BORDER = '#292929';
 
-const articleTagStyles = {
-  p: { marginTop: 0, marginBottom: 18 },
-  h1: { color: WHITE, fontSize: 25, fontWeight: '900' as const },
-  h2: { color: WHITE, fontSize: 21, fontWeight: '900' as const },
-  h3: { color: WHITE, fontSize: 18, fontWeight: '800' as const },
-  a: { color: YELLOW },
-  blockquote: { borderLeftColor: RED, borderLeftWidth: 3, paddingLeft: 14 },
-};
-
-const styles = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: BLACK },
   scroll: { flex: 1 },
   content: { paddingTop: 55, paddingHorizontal: 18 },
