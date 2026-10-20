@@ -56,6 +56,8 @@ The application retrieves content from the OpenMicFM REST API, providing a centr
 ```text
 https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net
 ```
+Video Demonstration link
+https://youtu.be/-6ypiN74Dgw
 
 ### Endpoints
 
