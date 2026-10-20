@@ -14,6 +14,7 @@ import {
 import { Stack, useRouter } from 'expo-router';
 
 import BottomNav from '../components/bottom-nav';
+import { useThemedStyles } from '../context/app-context';
 
 const API_URL =
   'https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net';
@@ -55,6 +56,7 @@ function scheduleText(show: Show): string {
 
 export default function ShowsScreen() {
   const router = useRouter();
+  const styles = useThemedStyles(baseStyles);
   const [shows, setShows] = useState<Show[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -200,7 +202,7 @@ const WHITE = '#FFFFFF';
 const GREY = '#929292';
 const BORDER = '#292929';
 
-const styles = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: BLACK },
   scroll: { flex: 1 },
   content: { paddingTop: 55, paddingHorizontal: 18 },
