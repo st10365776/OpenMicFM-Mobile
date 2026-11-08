@@ -54,7 +54,7 @@ The application retrieves content from the OpenMicFM REST API, providing a centr
 **API base URL:**
 
 ```text
-https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net
+https://openmicfm-dxcvewf4arf0djd0.southafricanorth-01.azurewebsites.net
 ```
 Video Demonstration link
 https://youtu.be/-6ypiN74Dgw
@@ -67,6 +67,10 @@ https://youtu.be/-6ypiN74Dgw
 | `GET /api/posts?status=Published` | Retrieves published articles |
 | `GET /api/posts?status=Published&type=Sport` | Retrieves published sports stories |
 | `GET /api/shows` | Retrieves station programme information |
+
+Google sign-in on Android uses the native Google Sign-In SDK and needs the public Web OAuth client ID in `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` at build time. In Google Cloud, the Android OAuth client must match the app's package name and the signing certificate SHA-1 used for the APK. iOS and web sign-in use `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` and `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`. These app build-time settings are separate from the backend's Azure app setting. Configure `GOOGLE_CLIENT_ID` on the Azure API to the Web OAuth client ID used as the ID token audience; the mobile app does not read this setting. The backend must implement `POST /api/listeners/google`, verify the submitted Google ID token from `{ "credential": "...", "intent": "login" }`, and create an OpenMicFM account if the Google user does not already exist. The endpoint must return the same `{ "token": "...", "user": { ... } }` shape as password login. The app does not treat the Google token itself as an OpenMicFM session.
+
+The mobile app's Notifications setting enables on-device alerts. When enabled, it checks the songs and published-post endpoints while the app is open (every 15 minutes and when returning to the foreground) and schedules local reminders 15 minutes before upcoming shows in the show schedule. New-song and news alerts are detected only during those checks; they cannot arrive while the app is closed or stopped because the current API has no push-token registration or push-delivery service. Show reminders already scheduled by the device can fire while the app is closed.
 
 The application supports JSON array responses and responses containing the corresponding `songs`, `posts`, or `shows` array.
 

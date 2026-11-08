@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     Alert,
+    Platform,
     Pressable,
     ScrollView,
     StatusBar,
@@ -11,6 +12,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppContext } from '../context/app-context';
+import {
+	disableLocalNotifications,
+	enableLocalNotifications,
+	getLocalNotificationsEnabled,
+} from '../services/local-notifications';
 
 const audioQualities = ['Low', 'Standard', 'High'] as const;
 
@@ -18,7 +24,8 @@ export default function MoreScreen() {
 	const router = useRouter();
 	const { themeMode, setThemeMode, colors, user, signOut } = useAppContext();
 	const [audioQuality, setAudioQuality] = useState<(typeof audioQualities)[number]>('Standard');
-	const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+	const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+	const [notificationsBusy, setNotificationsBusy] = useState(true);
 	const [privacyExpanded, setPrivacyExpanded] = useState(false);
 
 	const isDark = themeMode === 'dark';
@@ -27,6 +34,47 @@ export default function MoreScreen() {
 	const label = colors.muted;
 	const hint = colors.subtle;
 	const chevron = colors.muted;
+
+	useEffect(() => {
+		let mounted = true;
+		getLocalNotificationsEnabled()
+			.then((enabled) => {
+				if (mounted) setNotificationsEnabled(enabled);
+			})
+			.catch((error: unknown) => {
+				console.error('Could not load notification preference:', error);
+			})
+			.finally(() => {
+				if (mounted) setNotificationsBusy(false);
+			});
+
+		return () => {
+			mounted = false;
+		};
+	}, []);
+
+	const toggleNotifications = async () => {
+		setNotificationsBusy(true);
+		try {
+			if (notificationsEnabled) {
+				await disableLocalNotifications();
+				setNotificationsEnabled(false);
+			} else {
+				await enableLocalNotifications();
+				setNotificationsEnabled(true);
+			}
+		} catch (error) {
+			console.error('Could not update notification preference:', error);
+			Alert.alert(
+				'Notifications',
+				error instanceof Error
+					? error.message
+					: 'Could not update notifications. Please try again.'
+			);
+		} finally {
+			setNotificationsBusy(false);
+		}
+	};
 
 	const showAudioQualityOptions = () => {
 		Alert.alert('Audio quality', 'Choose your preferred playback quality.', [
@@ -168,9 +216,10 @@ export default function MoreScreen() {
 							{ borderBottomColor: divider },
 							pressed && styles.pressed,
 						]}
-						onPress={() => setNotificationsEnabled((enabled) => !enabled)}
+						onPress={toggleNotifications}
+						disabled={notificationsBusy || Platform.OS === 'web'}
 						accessibilityRole="switch"
-						accessibilityState={{ checked: notificationsEnabled }}
+						accessibilityState={{ checked: notificationsEnabled, disabled: notificationsBusy || Platform.OS === 'web' }}
 						accessibilityLabel="Notifications"
 					>
 						<View style={[styles.iconBox, { backgroundColor: colors.surfaceAlt }]}>
@@ -179,7 +228,13 @@ export default function MoreScreen() {
 						<View style={styles.settingCopy}>
 							<Text style={[styles.settingTitle, { color: colors.text }]}>Notifications</Text>
 							<Text style={[styles.settingDetail, { color: label }]}>
-								{notificationsEnabled ? 'Notifications are on' : 'Notifications are off'}
+								{Platform.OS === 'web'
+									? 'Available in the mobile app'
+									: notificationsBusy
+										? 'Checking notification settings…'
+										: notificationsEnabled
+											? 'Local alerts are on'
+											: 'Tap to enable local alerts'}
 							</Text>
 						</View>
 						<View

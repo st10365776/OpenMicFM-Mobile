@@ -7,6 +7,7 @@ import {
 import { useEffect, useRef } from 'react';
 import { StatusBar } from 'react-native';
 import { AppProvider, useAppContext } from '../context/app-context';
+import { startLocalNotificationSync } from '../services/local-notifications';
 
 export default function RootLayout() {
   return (
@@ -22,6 +23,8 @@ function ThemedStack() {
   const navigationState = useRootNavigationState();
   const started = useRef(false);
   const { colors, themeMode } = useAppContext();
+
+  useEffect(() => startLocalNotificationSync(), []);
 
   useEffect(() => {
     if (!navigationState?.key || started.current) return;

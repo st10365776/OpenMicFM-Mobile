@@ -17,7 +17,7 @@ import BottomNav from '../components/bottom-nav';
 import { useThemedStyles } from '../context/app-context';
 
 const API_URL =
-  'https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net';
+  'https://openmicfm-dxcvewf4arf0djd0.southafricanorth-01.azurewebsites.net';
 
 type Show = {
   id: number;

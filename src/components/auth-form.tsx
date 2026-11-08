@@ -2,24 +2,25 @@
 import { useState } from 'react';
 
 import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 import { useRouter } from 'expo-router';
 import {
-  useAppContext,
-  useThemedStyles,
-  type ListenerProfile,
+    useAppContext,
+    useThemedStyles,
+    type ListenerProfile,
 } from '../context/app-context';
+import GoogleSignInButton from './google-sign-in-button';
 
 const API_URL =
-  'https://openmic-fddchhhhajbtfmbv.southafricanorth-01.azurewebsites.net';
+  'https://openmicfm-dxcvewf4arf0djd0.southafricanorth-01.azurewebsites.net';
 
 /* =========================================================
    OPENMIC FM - LOGIN AND REGISTRATION
@@ -56,6 +57,73 @@ export default function AuthForm({ mode }: AuthProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const handleGoogleIdToken = async (idToken: string) => {
+    setError('');
+    setSubmitting(true);
+
+    try {
+      const response = await fetch(`${API_URL}/api/listeners/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          credential: idToken,
+          intent: 'login',
+        }),
+      });
+
+      let data: {
+        token?: unknown;
+        user?: ListenerProfile;
+        error?: unknown;
+        message?: unknown;
+      };
+      try {
+        data = await response.json();
+      } catch {
+        setError('The server returned an invalid response. Please try again.');
+        return;
+      }
+
+      if (!response.ok) {
+        setError(
+          typeof data.error === 'string'
+            ? data.error
+            : typeof data.message === 'string'
+              ? data.message
+              : `Request failed (${response.status}).`
+        );
+        return;
+      }
+
+      if (typeof data.token !== 'string' || !data.token) {
+        setError('The Google sign-in response did not include an authentication token.');
+        return;
+      }
+
+      const profile = data.user || {};
+      signIn(data.token, {
+        ...profile,
+        fullName:
+          typeof profile.fullName === 'string'
+            ? profile.fullName
+            : typeof profile.name === 'string'
+              ? profile.name
+              : typeof profile.email === 'string'
+                ? profile.email
+                : 'OpenMicFM listener',
+        email: typeof profile.email === 'string' ? profile.email : '',
+      });
+      router.replace('/profile' as never);
+    } catch (requestError) {
+      console.error('Google listener authentication failed:', requestError);
+      setError(
+        'Cannot connect to the OpenMicFM account service. Check your connection and try again.'
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   /* =======================================================
      LOGIN AND REGISTRATION VALIDATION
@@ -212,6 +280,18 @@ export default function AuthForm({ mode }: AuthProps) {
             ? 'Join OpenMic FM and stay connected to your favourite station.'
             : 'Sign in to your account and enjoy OpenMic FM.'}
         </Text>
+
+        <GoogleSignInButton
+          disabled={submitting}
+          onGoogleIdToken={handleGoogleIdToken}
+          onError={setError}
+        />
+
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>OR CONTINUE WITH EMAIL</Text>
+          <View style={styles.dividerLine} />
+        </View>
 
         {/* FULL NAME - REGISTRATION ONLY */}
 
@@ -426,6 +506,25 @@ const baseStyles = StyleSheet.create({
     lineHeight: 22,
     marginTop: 12,
     marginBottom: 22,
+  },
+
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 24,
+  },
+
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: BORDER,
+  },
+
+  dividerText: {
+    color: GREY,
+    fontSize: 10,
+    fontWeight: '700',
   },
 
   label: {
